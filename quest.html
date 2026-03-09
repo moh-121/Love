@@ -10,7 +10,7 @@
         body { margin: 0; padding: 0; overflow: hidden; background: #05000a; font-family: sans-serif; height: 100vh; touch-action: none; }
         
         #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #world { position: absolute; width: 4500px; height: 100%; background: linear-gradient(to bottom, #0f001a 0%, #2b0000 100%); will-change: transform; transition: transform 0.1s linear; }
+        #world { position: absolute; width: 4500px; height: 100%; background: linear-gradient(to bottom, #0f001a 0%, #2b0000 100%); will-change: transform; }
 
         /* CHARACTERS */
         .char { position: absolute; width: 45px; height: 60px; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
@@ -18,15 +18,17 @@
         .stethoscope { position: absolute; width: 22px; height: 20px; border: 2.5px solid #333; border-radius: 50%; top: 4px; left: 8px; border-top-color: transparent; }
         .cross { color: #ff4d6d; font-size: 14px; position: absolute; top: 20px; left: 13px; font-weight: 900; }
         
-        /* Mohammed Redesign */
+        /* Mohammed */
         .mo-body { width: 40px; height: 52px; background: #1a1a1a; border-radius: 10px 10px 2px 2px; position: absolute; bottom: 8px; border-top: 18px solid #3d2b1f; }
         .mo-shirt { position: absolute; width: 12px; height: 20px; background: #34495e; top: 18px; left: 14px; border-radius: 2px; }
 
         .foot { width: 14px; height: 10px; background: #111; border-radius: 3px; position: absolute; bottom: 0; }
         .foot-l { left: 6px; } .foot-r { right: 6px; }
 
+        /* Traps */
         .spike { position: absolute; width: 40px; height: 30px; background: #7f8c8d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); z-index: 5; }
 
+        /* Cutscene UI */
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: background 2s; }
         .love-msg { font-family: 'Caveat', cursive; font-size: 45px; color: white; opacity: 0; text-shadow: 0 0 20px #ff4d6d; text-align: center; transition: 2s; }
         
@@ -104,22 +106,17 @@
             won = true; vX = 0; vY = 0;
             document.getElementById('controls').style.opacity = '0';
             
-            // 1. SNAP CAMERA DIRECTLY TO MO (No more relative offsets)
-            const centerX = -(4200 - window.innerWidth / 2 + 20);
-            world.style.transition = "transform 3s ease-in-out";
-            world.style.transform = `translateX(${centerX}px) scale(1.8)`;
-
-            // 2. FLOAT UPWARDS TOGETHER
+            // 1. FLOAT UPWARDS TOGETHER (No Zoom, Camera stays put)
             setTimeout(() => {
                 player.style.transition = mo.style.transition = "all 5s ease-in-out";
-                player.style.top = mo.style.top = "20vh"; 
+                player.style.top = mo.style.top = "30vh"; 
                 player.style.left = "4180px"; 
                 mo.style.left = "4210px";
                 overlay.style.background = "rgba(10, 0, 20, 0.7)";
-            }, 500);
+            }, 100);
 
-            setTimeout(() => { msg.style.opacity = '1'; }, 3500);
-            setTimeout(() => window.location.href = "index.html", 8000);
+            setTimeout(() => { msg.style.opacity = '1'; }, 2500);
+            setTimeout(() => window.location.href = "index.html", 7000);
         }
 
         function update() {
@@ -136,7 +133,7 @@
                     }
                 });
 
-                // Spikes reset to last safe spot (rough reset)
+                // Spike collision - Resets to start
                 document.querySelectorAll('.spike').forEach(s => {
                     const sR = s.getBoundingClientRect(); const pR = player.getBoundingClientRect();
                     if(!(pR.right < sR.left || pR.left > sR.right || pR.bottom < sR.top || pR.top > sR.bottom)) {
@@ -144,8 +141,8 @@
                     }
                 });
 
-                // CENTER CAMERA ON PLAYER
-                let camX = -(pX - window.innerWidth / 2); // Change to /2 for perfect center
+                // KEEP CAMERA CENTERED ON PLAYER 1:1
+                let camX = -(pX - window.innerWidth / 2);
                 if(camX > 0) camX = 0;
                 if(camX < -(4500 - window.innerWidth)) camX = -(4500 - window.innerWidth);
                 world.style.transform = `translateX(${camX}px)`;
