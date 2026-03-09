@@ -24,44 +24,41 @@
         }
 
         /* Start Screen */
+        #start-screen { display: flex; flex-direction: column; align-items: center; }
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 40px; font-size: 20px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); z-index: 100; }
 
-        /* Game Elements */
+        /* Game UI */
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
         #game-ui { position: absolute; top: 20px; left: 20px; font-size: 20px; color: #ff4d6d; font-weight: bold; }
         #health-ui { position: absolute; top: 20px; right: 20px; font-size: 20px; letter-spacing: 5px; }
-        
-        .game-heart { 
-            position: absolute; 
-            font-size: 45px; 
-            padding: 20px; /* Extra hit area for fingers */
-            cursor: pointer; 
-            user-select: none; 
-            animation: fall linear forwards;
-            z-index: 600;
-        }
+        .game-heart { position: absolute; font-size: 45px; padding: 25px; cursor: pointer; user-select: none; animation: fall linear forwards; z-index: 600; touch-action: none; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        /* Paper Unfolding */
+        /* Envelope / Folded Letter Transition */
+        #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
+        .envelope { width: 150px; height: 100px; background: #fff9e6; border: 2px solid #e0d8c3; position: relative; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .envelope::after { content: '❤️'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; }
+
+        /* Actual Message Container */
         #message-container { 
             width: 92%; max-width: 450px; display: none; padding: 35px 25px; 
             background: #fff9e6; color: #2c3e50; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             transform: scaleY(0); transform-origin: top;
             transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
-            opacity: 0; border-radius: 4px; z-index: 10;
+            opacity: 0; border-radius: 4px;
         }
         #message-container.open { display: block; transform: scaleY(1) rotate(-0.5deg); opacity: 1; }
         #message { font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.35; text-align: left; opacity: 0; transition: opacity 0.8s ease-in 1s; margin: 0; }
 
         #question-area { opacity: 0; transition: opacity 1s ease-in; margin-top: 25px; pointer-events: none; }
-        .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; position: relative; z-index: 10; }
+        .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; z-index: 10; }
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s; z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
 
-        /* Stars & Floaters */
+        /* Effects */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart-float { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
@@ -74,12 +71,19 @@
         <h1>For Haya ❤️</h1>
         <p class="sub-text">Since the day I first said I love you</p>
         <div id="counter">Loading...</div>
-        <button class="btn-main" id="startBtn" onclick="startGame()">Click here, Haya</button>
+        <button class="btn-main" onclick="startGame()">Click here, Haya</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">Hearts: <span id="score">0</span> / 10</div>
-        <div id="health-ui" id="health-display">❤️❤️❤️</div>
+        <div id="game-ui">Score: <span id="score">0</span> / 10</div>
+        <div id="health-ui">❤️❤️❤️</div>
+    </div>
+
+    <div id="envelope-container">
+        <div class="envelope"></div>
+        <p style="color: #ffd6e0; margin-bottom: 20px; font-size: 18px;">You collected enough love!</p>
+        <button class="btn-main" onclick="openLetter()">Open Letter?</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:white; opacity:0.5; margin-top:15px; cursor:pointer;">Not now</button>
     </div>
 
     <div id="message-container">
@@ -114,15 +118,10 @@
         let lives = 3;
         let gameActive = false;
         const targetScore = 10;
-        const gameContainer = document.getElementById("game-container");
 
         function startGame() {
-            score = 0;
-            lives = 3;
-            document.getElementById("score").innerText = score;
-            document.getElementById("health-ui").innerText = "❤️❤️❤️";
             document.getElementById("start-screen").style.display = "none";
-            gameContainer.style.display = "block";
+            document.getElementById("game-container").style.display = "block";
             gameActive = true;
             spawnHeart();
         }
@@ -132,61 +131,53 @@
             const h = document.createElement("div");
             h.className = "game-heart";
             h.innerHTML = "❤️";
-            h.style.left = Math.random() * 70 + 10 + "vw";
+            h.style.left = Math.random() * 75 + 10 + "vw";
             h.style.top = "-60px";
             h.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
             
-            // Touch/Click Handler
-            const collect = (e) => {
+            const catchHeart = (e) => {
                 if (!gameActive) return;
                 e.preventDefault();
                 score++;
                 document.getElementById("score").innerText = score;
                 h.remove();
-                if (score >= targetScore) endGame(true);
+                if (score >= targetScore) endToEnvelope();
             };
 
-            h.addEventListener("touchstart", collect);
-            h.addEventListener("mousedown", collect);
-            
-            gameContainer.appendChild(h);
+            h.addEventListener("touchstart", catchHeart);
+            h.addEventListener("mousedown", catchHeart);
+            document.getElementById("game-container").appendChild(h);
 
-            // Check if missed
             h.addEventListener('animationend', () => {
                 if (h.parentNode) {
                     h.remove();
                     lives--;
-                    updateHealth();
-                    if (lives <= 0) endGame(false);
+                    updateLives();
+                    if (lives <= 0) {
+                        alert("Game Over! Try again ❤️");
+                        location.reload();
+                    }
                 }
             });
-
             setTimeout(spawnHeart, 800);
         }
 
-        function updateHealth() {
-            let hText = "";
-            for(let i=0; i<lives; i++) hText += "❤️";
-            document.getElementById("health-ui").innerText = hText;
+        function updateLives() {
+            let lText = "";
+            for(let i=0; i<lives; i++) lText += "❤️";
+            document.getElementById("health-ui").innerText = lText;
         }
 
-        function endGame(win) {
+        function endToEnvelope() {
             gameActive = false;
-            // Clear falling hearts
-            const activeHearts = document.querySelectorAll(".game-heart");
-            activeHearts.forEach(h => h.remove());
-
-            if (win) {
-                gameContainer.style.display = "none";
-                showLetter();
-            } else {
-                alert("Game Over! Try again for a surprise ❤️");
-                gameContainer.style.display = "none";
-                document.getElementById("start-screen").style.display = "flex";
-            }
+            document.getElementById("game-container").style.display = "none";
+            const ec = document.getElementById("envelope-container");
+            ec.style.display = "flex";
+            setTimeout(() => ec.style.opacity = "1", 50);
         }
 
-        function showLetter() {
+        function openLetter() {
+            document.getElementById("envelope-container").style.display = "none";
             const container = document.getElementById("message-container");
             container.style.display = "block";
             setTimeout(() => { 
@@ -197,7 +188,7 @@
                 const qa = document.getElementById("question-area");
                 qa.style.opacity = "1";
                 qa.style.pointerEvents = "auto";
-            }, 5000);
+            }, 5500);
         }
 
         // --- RUNAWAY LOGIC ---
@@ -216,7 +207,7 @@
         function sayYes() {
             document.getElementById("message-container").style.background = "none";
             document.getElementById("message-container").style.boxShadow = "none";
-            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 38px;'>hehe! I knew it! <br> Love you forever baby 🤏 ❤️</h2>";
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>hehe! I knew it! <br> Love you forever baby 🤏 ❤️</h2>";
             createHearts(100);
         }
 
