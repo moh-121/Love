@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For Haya ❤️</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500&display=swap');
+
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -20,22 +22,52 @@
             overflow: hidden;
             touch-action: manipulation;
         }
+
+        /* Start Screen Styles */
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 40px; font-size: 20px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); z-index: 100; }
-        
-        #message-container { width: 90%; max-width: 500px; display: none; padding: 20px; }
-        #message { font-size: 19px; line-height: 1.6; color: #ffd6e0; margin-bottom: 30px; }
-        
-        .yes-btn { background: #4caf50; padding: 15px 45px; border-radius: 50px; color: white; border: none; font-size: 22px; font-weight: bold; cursor: pointer; position: relative; z-index: 10; }
-        .no-btn { background: #f44336; padding: 10px 25px; border-radius: 50px; color: white; border: none; font-size: 16px; position: absolute; transition: 0.2s ease-out; z-index: 5; cursor: pointer; }
-        
-        .button-wrapper { position: relative; height: 150px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
 
+        /* Paper/Letter Styling */
+        #message-container { 
+            width: 90%; 
+            max-width: 450px; 
+            display: none; 
+            padding: 40px 30px; 
+            background: #fff9e6; /* Old paper color */
+            color: #2c3e50; 
+            border-radius: 2px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 100px rgba(0,0,0,0.05);
+            transform: rotate(-1deg);
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        
+        #message { 
+            font-family: 'Caveat', cursive; 
+            font-size: 24px; 
+            line-height: 1.4; 
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        /* Question Area (Hidden for 3 seconds) */
+        #question-area { 
+            opacity: 0; 
+            transition: opacity 1.5s ease-in; 
+            margin-top: 20px;
+            pointer-events: none; /* Prevents clicking before visible */
+        }
+        
+        .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; position: relative; z-index: 10; }
+        .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.2s ease-out; z-index: 5; cursor: pointer; }
+        .button-wrapper { position: relative; height: 100px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
+
+        /* Effects */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
-        .heart { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; }
+        .heart { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
         @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-110vh); opacity: 0; } }
     </style>
 </head>
@@ -52,7 +84,7 @@
         <p id="message">With every passing day, my love for you only grows stronger. Every time I hear your voice, I fall a little more like you’ve become a part of me, a part I never want to let go. I feel so lucky to call you mine, and I will always love you.</p>
         
         <div id="question-area">
-            <p style="font-size: 24px; font-weight: bold; color: #ff4d6d; margin-bottom: 15px;">💍 Will you stay with me forever?</p>
+            <p style="font-size: 22px; font-weight: bold; color: #ff4d6d; font-family: sans-serif;">💍 Will you stay with me forever?</p>
             <div class="button-wrapper">
                 <button id="yesBtn" class="yes-btn" onclick="sayYes()">Yes!</button>
                 <button id="noBtn" class="no-btn" style="bottom: 0;">No</button>
@@ -75,31 +107,35 @@
         setInterval(updateCounter, 1000);
         updateCounter();
 
+        // --- TRANSITION LOGIC ---
         function startApp() {
             document.getElementById("start-screen").style.display = "none";
-            document.getElementById("message-container").style.display = "block";
+            const msgContainer = document.getElementById("message-container");
+            msgContainer.style.display = "block";
+            
+            // Fade in the paper
+            setTimeout(() => { msgContainer.style.opacity = "1"; }, 100);
+
+            // Wait 3 seconds, then show the question and buttons
+            setTimeout(() => {
+                const qa = document.getElementById("question-area");
+                qa.style.opacity = "1";
+                qa.style.pointerEvents = "auto";
+            }, 3000);
+            
             createHearts(15);
         }
 
-        // --- NEW NO-OVERLAP RUNAWAY LOGIC ---
+        // --- RUNAWAY LOGIC ---
         const noBtn = document.getElementById("noBtn");
-        
         function moveNo() {
-            // Screen width and height
             const w = window.innerWidth;
             const h = window.innerHeight;
-            
-            // Generate a position strictly in the top or bottom 20% of the screen
-            // or the far left/right to stay away from the center "Yes" button
             const zones = [
-                {x: 20, y: 20}, // Top left
-                {x: w - 100, y: 20}, // Top right
-                {x: 20, y: h - 100}, // Bottom left
-                {x: w - 100, y: h - 100} // Bottom right
+                {x: 30, y: 30}, {x: w - 120, y: 30}, 
+                {x: 30, y: h - 100}, {x: w - 120, y: h - 100}
             ];
-            
             const randomZone = zones[Math.floor(Math.random() * zones.length)];
-            
             noBtn.style.position = 'fixed';
             noBtn.style.left = randomZone.x + "px";
             noBtn.style.top = randomZone.y + "px";
@@ -109,8 +145,10 @@
         noBtn.addEventListener("mouseover", moveNo);
 
         function sayYes() {
-            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>hehe! I knew it! <br> Love you forever baby 🤏 ❤️</h2>";
-            createHearts(80);
+            document.getElementById("message-container").style.background = "none";
+            document.getElementById("message-container").style.boxShadow = "none";
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 38px; font-family: sans-serif;'>hehe! I knew it! <br> Love you forever baby 🤏 ❤️</h2>";
+            createHearts(100);
         }
 
         function createHearts(n) {
@@ -119,11 +157,11 @@
                     const h = document.createElement("div");
                     h.className = "heart"; h.innerHTML = "❤️";
                     h.style.left = Math.random() * 100 + "vw"; h.style.top = "100vh";
-                    h.style.fontSize = (Math.random() * 20 + 15) + "px";
+                    h.style.fontSize = (Math.random() * 20 + 20) + "px";
                     h.style.setProperty('--speed', (Math.random() * 2 + 3) + "s");
                     document.body.appendChild(h);
                     setTimeout(function() { h.remove(); }, 5000);
-                }, i * 80);
+                }, i * 70);
             }
         }
 
