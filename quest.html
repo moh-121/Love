@@ -2,188 +2,224 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Haya: Clinical Vanguard</title>
+    <title>Haya: Clinical Shadow</title>
     <style>
-        :root { --cyan: #00f2ff; --red: #ff0055; --dark: #05020a; --white: #ffffff; }
-        body { margin: 0; background: var(--dark); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
+        :root { --cyan: #00f2ff; --red: #ff0055; --bg: #030208; --white: #f0f0f5; }
+        body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Inter', sans-serif; color: white; }
 
-        #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; perspective: 1000px; }
-        #world { position: absolute; will-change: transform; transition: transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        #world { position: absolute; will-change: transform; }
 
-        /* --- CHARACTER DESIGN: HAYA --- */
+        /* --- THE CHARACTER: HAYA (SQUASH & STRETCH RIG) --- */
         #haya { 
-            position: absolute; width: 60px; height: 90px; 
+            position: absolute; width: 50px; height: 80px; 
             z-index: 1000; transform-origin: bottom center;
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Skeletal Parts */
-        .h-part { position: absolute; background-size: contain; transition: transform 0.2s; }
+        .haya-sprite { position: relative; width: 100%; height: 100%; }
+
+        /* Floating Hair (Ori-style physics) */
+        .hair { 
+            position: absolute; top: -38px; left: 8px; width: 40px; height: 30px; 
+            background: #2a1a10; border-radius: 20px 20px 5px 15px; 
+            transition: transform 0.3s; z-index: 10;
+        }
+
+        /* The Clinical Coat (Cape-like physics) */
+        .coat { 
+            position: absolute; top: -5px; left: 5px; width: 40px; height: 60px; 
+            background: var(--white); border-radius: 10px 10px 25px 25px;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.4);
+            transition: transform 0.2s, border-radius 0.2s;
+        }
+
+        .arm { 
+            position: absolute; top: 10px; right: -8px; width: 10px; height: 35px; 
+            background: var(--white); border-radius: 5px; transform-origin: top center;
+            z-index: 15; transition: transform 0.1s;
+        }
         
-        .h-head { width: 34px; height: 34px; background: #ffe0bd; border-radius: 50%; top: -35px; left: 13px; z-index: 5; }
-        .h-hair { position: absolute; width: 44px; height: 32px; background: #2d1b10; border-radius: 20px 20px 5px 15px; top: -5px; left: -5px; animation: hairFloat 2s infinite ease-in-out; }
-        
-        .h-coat { width: 40px; height: 55px; background: var(--white); border-radius: 8px 8px 18px 18px; top: 0; left: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-bottom: 4px solid #ddd; }
-        .h-cross { position: absolute; color: var(--red); font-weight: bold; font-size: 12px; right: 6px; top: 6px; }
+        /* The Plasma Blade */
+        .blade { 
+            position: absolute; bottom: -40px; left: 2px; width: 6px; height: 50px; 
+            background: var(--cyan); border-radius: 3px; 
+            box-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
+            opacity: 0.8;
+        }
 
-        .h-arm { width: 10px; height: 35px; background: var(--white); border-radius: 5px; top: 5px; transform-origin: top center; z-index: 6; }
-        .h-arm.front { right: -5px; }
-        .h-syringe { position: absolute; width: 6px; height: 45px; background: var(--cyan); bottom: -35px; left: 2px; box-shadow: 0 0 20px var(--cyan); border-radius: 2px; }
+        /* --- VISUAL EFFECTS (JUICE) --- */
+        .slash-arc {
+            position: absolute; width: 120px; height: 120px; border: 6px solid var(--cyan);
+            border-radius: 50%; border-right-color: transparent; border-top-color: transparent;
+            opacity: 0; pointer-events: none; z-index: 2000;
+        }
+        .slash-active { animation: slash-glow 0.25s ease-out; }
+        @keyframes slash-glow {
+            0% { opacity: 1; transform: scale(0.6) rotate(-45deg); filter: brightness(2); }
+            100% { opacity: 0; transform: scale(1.4) rotate(120deg); filter: brightness(1); }
+        }
 
-        .h-leg { width: 12px; height: 30px; background: var(--white); top: 50px; border-bottom: 8px solid #111; z-index: 1; }
-
-        /* --- ANIMATIONS --- */
-        @keyframes hairFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-        
-        /* Idle state */
-        .idle .h-coat { animation: breath 3s infinite ease-in-out; }
-        @keyframes breath { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.03); } }
-
-        /* Running state */
-        .running .h-leg.l { animation: legSwing 0.4s infinite alternate; }
-        .running .h-leg.r { animation: legSwing 0.4s infinite alternate-reverse; }
-        .running .h-arm.front { animation: armSwing 0.4s infinite alternate; }
-        @keyframes legSwing { from { transform: rotate(-30deg); } to { transform: rotate(30deg); } }
-        @keyframes armSwing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
-
-        /* Attack state */
-        .attacking .h-arm.front { transform: rotate(150deg) scale(1.2) !important; transition: transform 0.1s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .dust { 
+            position: absolute; background: rgba(255,255,255,0.2); border-radius: 50%; 
+            pointer-events: none; animation: dust-fade 0.5s forwards; 
+        }
+        @keyframes dust-fade { to { opacity: 0; transform: translateY(-20px) scale(0); } }
 
         /* --- ENVIRONMENT --- */
-        .platform { position: absolute; background: linear-gradient(180deg, #1e1133 0%, #0a0515 100%); border-top: 4px solid var(--cyan); border-radius: 4px; box-shadow: 0 10px 50px rgba(0,0,0,0.8); }
-        .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(var(--cyan) 1px, transparent 1px), linear-gradient(90deg, var(--cyan) 1px, transparent 1px); background-size: 100px 100px; opacity: 0.05; pointer-events: none; }
+        .plat { 
+            position: absolute; background: linear-gradient(180deg, #160d26 0%, #05020a 100%); 
+            border-top: 2px solid rgba(0, 242, 255, 0.3); border-radius: 2px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+        }
 
         /* --- UI --- */
-        #hud { position: fixed; top: 40px; left: 40px; z-index: 10000; }
-        .vitals { font-size: 10px; letter-spacing: 3px; margin-bottom: 10px; opacity: 0.7; }
-        .hp-bar { width: 250px; height: 4px; background: rgba(255,255,255,0.1); position: relative; }
-        .hp-fill { width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); }
+        #hud { position: fixed; top: 30px; left: 30px; letter-spacing: 5px; font-weight: 200; opacity: 0.8; }
+        .hp-box { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 10px; }
+        .hp-fill { width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
     </style>
 </head>
 <body>
 
-<div class="grid-bg"></div>
-
 <div id="stage">
     <div id="hud">
-        <div class="vitals">OPERATOR: HAYA // STATUS: ACTIVE</div>
-        <div class="hp-bar"><div class="hp-fill"></div></div>
+        HAYA // PROTOCOL
+        <div class="hp-box"><div class="hp-fill"></div></div>
     </div>
-
     <div id="world">
-        <div id="haya" class="idle">
-            <div class="h-part h-head"><div class="h-hair"></div></div>
-            <div class="h-part h-coat"><div class="h-cross">✚</div></div>
-            <div class="h-part h-arm front"><div class="h-syringe"></div></div>
-            <div class="h-part h-leg l" style="left: 12px;"></div>
-            <div class="h-part h-leg r" style="left: 28px;"></div>
+        <div id="haya">
+            <div class="haya-sprite">
+                <div class="slash-arc" id="slash"></div>
+                <div class="hair" id="hair"></div>
+                <div class="coat" id="coat"></div>
+                <div class="arm" id="arm"><div class="blade"></div></div>
+            </div>
         </div>
-        <div id="objects"></div>
+        <div id="elements"></div>
     </div>
 </div>
 
 <script>
     const world = document.getElementById('world'), haya = document.getElementById('haya');
-    
-    // Quality of Life Variables
-    let pX = 200, pY = 400, vX = 0, vY = 0;
-    let camX = 0, isAttacking = false;
-    let coyoteCounter = 0; // Allows jumping for a few frames after leaving a platform
+    const coat = document.getElementById('coat'), hair = document.getElementById('hair');
+    const arm = document.getElementById('arm'), slash = document.getElementById('slash');
 
+    let pX = 300, pY = 400, vX = 0, vY = 0;
+    let camX = 0, isAttacking = false, facing = 1;
+    
+    // Pro Physics Constants
     const config = {
-        gravity: 0.8,
-        friction: 0.82,
-        accel: 1.5,
-        jump: -17,
-        coyoteMax: 10
+        gravity: 0.75,
+        friction: 0.84,
+        accel: 1.4,
+        jump: -16,
+        lerp: 0.1 // Camera smoothness
     };
 
     const keys = {};
-
-    // Map Build (High Detail Layout)
     const map = [
-        {x: 0, y: 600, w: 1200},
-        {x: 1300, y: 450, w: 400},
-        {x: 1800, y: 300, w: 400},
-        {x: 2300, y: 500, w: 1000}
+        {x: 0, y: 600, w: 1500}, {x: 1600, y: 450, w: 500}, 
+        {x: 2200, y: 300, w: 400}, {x: 2700, y: 500, w: 1200}
     ];
 
     map.forEach(p => {
-        const d = document.createElement('div');
-        d.className = 'platform';
-        Object.assign(d.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '100px' });
-        document.getElementById('objects').appendChild(d);
+        const d = document.createElement('div'); d.className = 'plat';
+        Object.assign(d.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '200px' });
+        document.getElementById('elements').appendChild(d);
     });
 
     window.onkeydown = (e) => keys[e.code] = true;
     window.onkeyup = (e) => keys[e.code] = false;
-    window.onmousedown = () => {
-        if(!isAttacking) {
-            isAttacking = true;
-            haya.classList.add('attacking');
-            setTimeout(() => {
-                isAttacking = false;
-                haya.classList.remove('attacking');
-            }, 300);
+    window.onmousedown = () => attack();
+
+    function attack() {
+        if(isAttacking) return;
+        isAttacking = true;
+        
+        // Hit-stop effect (pause the world slightly for impact)
+        document.body.style.filter = "brightness(1.5)";
+        slash.classList.add('slash-active');
+        arm.style.transform = "rotate(140deg) scale(1.3)";
+        
+        setTimeout(() => {
+            isAttacking = false;
+            document.body.style.filter = "none";
+            slash.classList.remove('slash-active');
+            arm.style.transform = "rotate(0deg) scale(1)";
+        }, 200);
+    }
+
+    function createDust(x, y) {
+        for(let i=0; i<5; i++) {
+            const d = document.createElement('div'); d.className = 'dust';
+            const size = Math.random() * 10 + 5;
+            Object.assign(d.style, {
+                left: x + 'px', top: y + 'px', 
+                width: size+'px', height: size+'px'
+            });
+            world.appendChild(d);
+            setTimeout(() => d.remove(), 500);
         }
-    };
+    }
 
     function update() {
-        // Horizontal Movement
-        if (keys['KeyA'] || keys['ArrowLeft']) vX -= config.accel;
-        if (keys['KeyD'] || keys['ArrowRight']) vX += config.accel;
+        // Movement Logic
+        if (keys['KeyA'] || keys['ArrowLeft']) { vX -= config.accel; facing = -1; }
+        if (keys['KeyD'] || keys['ArrowRight']) { vX += config.accel; facing = 1; }
         vX *= config.friction;
-
-        // Vertical Movement
         vY += config.gravity;
+        
         pX += vX; pY += vY;
 
-        // Collision & Coyote Time
+        // Collision & Landing Juice
         let grounded = false;
         map.forEach(p => {
-            if (pX + 40 > p.x && pX < p.x + p.w) {
-                if (vY > 0 && pY + 85 >= p.y && pY + 85 <= p.y + 50) {
-                    pY = p.y - 85;
-                    vY = 0;
-                    grounded = true;
+            if (pX + 30 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY + 80 >= p.y && pY + 80 <= p.y + 40) {
+                    if (vY > 5) { // Hard landing juice
+                        createDust(pX + 25, pY + 80);
+                        haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scale(1.3, 0.7)`;
+                    }
+                    pY = p.y - 80; vY = 0; grounded = true;
                 }
             }
         });
 
-        if (grounded) coyoteCounter = config.coyoteMax;
-        else coyoteCounter--;
-
-        // Jump Logic (Space / W)
-        if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && coyoteCounter > 0) {
+        // Variable Jump (Higher if held - Hollow Knight style)
+        if ((keys['Space'] || keys['KeyW']) && grounded) {
             vY = config.jump;
-            coyoteCounter = 0;
+            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scale(0.7, 1.4)`;
+            createDust(pX + 25, pY + 80);
         }
 
-        // --- VISUAL FEEDBACK (THE "ALIVE" PART) ---
-        // Animation States
-        if (Math.abs(vX) > 1 && grounded) {
-            haya.className = 'running';
-        } else if (!grounded) {
-            haya.className = 'jumping';
+        // --- THE "ALIVE" ANIMATION LOGIC ---
+        
+        // 1. Squash and Stretch (Dynamic scaling)
+        if (!grounded) {
+            let stretch = 1 + Math.abs(vY) * 0.02;
+            let squash = 1 - Math.abs(vY) * 0.02;
+            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${squash * facing}) scaleY(${stretch})`;
+        } else if (Math.abs(vX) < 1) {
+            // Idle breathing
+            const breath = 1 + Math.sin(Date.now() * 0.005) * 0.02;
+            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) scaleY(${breath})`;
         } else {
-            haya.className = 'idle';
+            // Running lean
+            const lean = Math.min(Math.abs(vX) * 2, 15);
+            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) rotate(${lean * facing}deg)`;
         }
-        if (isAttacking) haya.classList.add('attacking');
 
-        // Sprite Flip
-        let dir = 1;
-        if (vX < -0.5) dir = -1;
-        else if (vX > 0.5) dir = 1;
+        // 2. Physics-based Hair & Coat
+        hair.style.transform = `translateX(${-vX * 0.5}px) rotate(${-vX}deg)`;
+        coat.style.transform = `skewX(${-vX * 1.5}deg)`;
 
-        // Transform Player
-        haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${dir})`;
-
-        // Smooth Camera Follow
+        // 3. Smooth Camera
         const targetCam = -(pX - window.innerWidth / 2.5);
-        camX += (targetCam - camX) * 0.08;
+        camX += (targetCam - camX) * config.lerp;
         world.style.transform = `translateX(${camX}px)`;
 
         // Fall Safety
-        if (pY > 1200) { pX = 200; pY = 400; vX = 0; vY = 0; }
+        if (pY > 1500) { pX = 300; pY = 400; vX = 0; vY = 0; }
 
         requestAnimationFrame(update);
     }
