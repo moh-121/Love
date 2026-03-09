@@ -3,194 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Haya: Pixel Protocol</title>
+    <title>Haya: High-Detail 2D</title>
     <style>
-        body { margin: 0; background: #050010; overflow: hidden; font-family: 'Courier New', monospace; }
-        #game { position: relative; width: 100vw; height: 100vh; }
-        canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; }
+        :root { --primary: #00f2ff; --accent: #ff0055; --bg: #05020a; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; height: 100vh; }
         
-        /* HUD */
-        #ui { position: fixed; top: 20px; left: 20px; color: #fff; z-index: 10; pointer-events: none; }
-        .bar { width: 120px; height: 12px; border: 2px solid #fff; background: #222; margin-top: 5px; }
-        #dash-fill { width: 100%; height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* Mobile Controls */
-        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 20; }
-        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 3px solid #fff; color: #fff; 
-               display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; border-radius: 8px; }
-        .atk { background: #00ffff; color: #000; border: none; width: 85px; height: 85px; }
-        .jmp { background: #ff0055; border: none; }
+        /* --- DETAILED BACKGROUND --- */
+        .sky-gradient { position: absolute; width: 100%; height: 100%; background: linear-gradient(to bottom, #0a0515, #1a0b2e); z-index: 1; }
+        .parallax-stars { position: absolute; width: 200%; height: 100%; background-image: radial-gradient(white 1px, transparent 1px); background-size: 50px 50px; z-index: 2; opacity: 0.3; }
+        .far-city { position: absolute; bottom: 0; width: 200%; height: 300px; background: repeating-linear-gradient(90deg, #0d061a 0px, #0d061a 40px, transparent 40px, transparent 80px); opacity: 0.4; z-index: 3; }
+
+        #world { position: absolute; width: 10000px; height: 100%; will-change: transform; z-index: 10; }
+
+        /* --- THE HIGH-DETAIL MODEL --- */
+        .char { position: absolute; width: 80px; height: 120px; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; }
+        
+        #haya-visual { position: relative; width: 50px; height: 110px; transform-origin: bottom center; transition: transform 0.1s; }
+
+        /* Hair with Shading */
+        .hair-main { position: absolute; width: 45px; height: 35px; background: linear-gradient(135deg, #3d2b1f 0%, #1a110a 100%); border-radius: 20px 20px 5px 15px; top: -5px; left: -5px; z-index: 11; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5); }
+        .hair-shine { position: absolute; width: 20px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; top: 5px; left: 10px; z-index: 12; transform: rotate(-5deg); }
+        
+        /* Face & Features */
+        .head { position: absolute; width: 34px; height: 36px; background: #ffe0bd; border-radius: 50% 50% 45% 45%; top: 0; left: 8px; z-index: 10; border-bottom: 2px solid #e0ac69; }
+        .eye { position: absolute; width: 6px; height: 9px; background: #111; border-radius: 50%; top: 14px; right: 6px; border-top: 2px solid #000; }
+        .eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 2px; left: 1px; }
+
+        /* Detailed Uniform */
+        .nurse-cap { position: absolute; width: 22px; height: 12px; background: #fff; top: -12px; left: 15px; border-radius: 4px; z-index: 15; transform: rotate(-10deg); border: 1px solid #ddd; box-shadow: 0 4px 4px rgba(0,0,0,0.2); }
+        .nurse-cap::after { content: '✚'; color: var(--accent); font-size: 10px; position: absolute; top: -1px; left: 6px; }
+
+        .torso { position: absolute; width: 32px; height: 50px; background: #fff; border-radius: 8px 8px 15px 15px; top: 32px; left: 8px; z-index: 5; background: linear-gradient(to bottom, #fff 70%, #f0f0f0 100%); border: 1px solid #eee; }
+        .waist-belt { position: absolute; width: 34px; height: 6px; background: #f0f0f0; top: 25px; left: -1px; border-radius: 3px; }
+
+        /* Limbs with Joint Shading */
+        .arm { position: absolute; width: 10px; height: 40px; background: #fff; border-radius: 5px; top: 35px; transform-origin: top center; border-bottom: 8px solid #ffe0bd; }
+        .arm-back { left: 4px; z-index: 2; filter: brightness(0.75); }
+        .arm-front { left: 22px; z-index: 8; box-shadow: -2px 0 5px rgba(0,0,0,0.1); }
+        
+        /* THE ENERGY SYRINGE */
+        .weapon { position: absolute; width: 8px; height: 50px; background: rgba(0, 242, 255, 0.2); bottom: -30px; left: 1px; border: 1px solid var(--primary); border-radius: 2px; box-shadow: 0 0 15px var(--primary); overflow: hidden; }
+        .weapon::before { content: ''; position: absolute; bottom: 0; width: 100%; height: 60%; background: var(--primary); }
+
+        .leg { position: absolute; width: 12px; height: 35px; background: #fff; border-radius: 0 0 5px 5px; top: 75px; transform-origin: top center; border-bottom: 10px solid #111; }
+        .leg-back { left: 12px; z-index: 2; filter: brightness(0.7); }
+        .leg-front { left: 24px; z-index: 8; }
+
+        /* --- HIGH-END ANIMATION --- */
+        .walking .leg-front { animation: gait 0.3s infinite alternate ease-in-out; }
+        .walking .leg-back { animation: gait 0.3s infinite alternate-reverse ease-in-out; }
+        .walking .arm-front { animation: gait 0.3s infinite alternate-reverse ease-in-out; }
+        .walking .arm-back { animation: gait 0.3s infinite alternate ease-in-out; }
+        @keyframes gait { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
+
+        /* Dash & Jump Effects */
+        .ghost { position: absolute; opacity: 0.4; pointer-events: none; filter: blur(2px) brightness(1.5) cyan; animation: fadeOut 0.4s forwards; }
+        @keyframes fadeOut { to { opacity: 0; transform: scale(0.8) translateX(-20px); } }
+
+        /* Platforms */
+        .plat { position: absolute; background: linear-gradient(180deg, #1e1133 0%, #0a0515 100%); border: 2px solid #3d2266; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1); border-radius: 8px; }
+        
+        /* UI */
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; color: #fff; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-shadow: 0 0 10px var(--primary); }
+        .bar-wrap { width: 150px; height: 6px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+        #dash-bar { width: 100%; height: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); transition: width 0.1s; }
+
+        /* Controls */
+        #controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 2000; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; backdrop-filter: blur(10px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .btn-main { background: var(--primary); color: #000; border: none; box-shadow: 0 0 20px var(--primary); width: 90px; height: 90px; }
+        .btn-jmp { background: var(--accent); border: none; box-shadow: 0 0 20px var(--accent); }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div>HAYA_UNIT_01</div>
-    <div class="bar"><div id="dash-fill"></div></div>
-</div>
+<div id="game-container">
+    <div class="sky-gradient"></div>
+    <div class="parallax-stars" id="stars"></div>
+    <div class="far-city" id="city"></div>
 
-<div id="controls">
-    <div style="display:flex; gap:15px;"><div class="btn" id="lBtn">◀</div><div class="btn" id="rBtn">▶</div></div>
-    <div style="display:flex; gap:15px; align-items: flex-end;">
-        <div class="btn atk" id="aBtn">💉</div>
-        <div class="btn jmp" id="jBtn">JMP</div>
+    <div id="hud">
+        HAYA // PROTOCOL
+        <div class="bar-wrap"><div id="dash-bar"></div></div>
+    </div>
+
+    <div id="world">
+        <div id="player" class="char">
+            <div id="haya-visual">
+                <div class="nurse-cap"></div>
+                <div class="arm arm-back"></div>
+                <div class="leg leg-back"></div>
+                <div class="torso">
+                    <div class="waist-belt"></div>
+                </div>
+                <div class="head">
+                    <div class="hair-main"><div class="hair-shine"></div></div>
+                    <div class="eye"></div>
+                </div>
+                <div class="leg leg-front"></div>
+                <div class="arm arm-front">
+                    <div class="weapon"></div>
+                </div>
+            </div>
+        </div>
+        <div id="platforms"></div>
+    </div>
+
+    <div id="controls">
+        <div style="display:flex; gap:20px;"><div class="btn" id="lBtn">◀</div><div class="btn" id="rBtn">▶</div></div>
+        <div style="display:flex; gap:20px; align-items: flex-end;">
+            <div class="btn btn-main" id="dBtn">⚡</div>
+            <div class="btn btn-jmp" id="jBtn">▲</div>
+        </div>
     </div>
 </div>
 
-<canvas id="screen"></canvas>
-
 <script>
-/** * PIXEL ART ENGINE 
- * We define the character as a grid of color codes 
- */
-const Colors = {
-    t: 'transparent',
-    s: '#ffdbac', // skin
-    h: '#3d2b1f', // hair
-    w: '#ffffff', // white (nurse outfit)
-    r: '#ff0055', // red (cross)
-    b: '#000000', // black (eyes/shoes)
-    c: '#00ffff'  // cyan (syringe/energy)
-};
+    const world = document.getElementById('world'), player = document.getElementById('player');
+    const visual = document.getElementById('haya-visual'), dashBar = document.getElementById('dash-bar');
+    const stars = document.getElementById('stars'), city = document.getElementById('city');
 
-// 16x16 Sprite Map for Haya (Sideways Profile)
-const hayaSprite = [
-    "ttttthhhhttttttt",
-    "tttthhhhhhhttttt",
-    "ttthhwwwwwhhtttt", // w is the white cap
-    "ttthwwrrrwwhtttt",
-    "ttthhhhhhhhhtttt",
-    "ttthssssssshhttt",
-    "ttthsssssssbhttt", // b is the eye
-    "tttssssssssstttt",
-    "ttwwwwwwwwwwtttt",
-    "ttwwwwrwwwwwtttt", // r is the cross
-    "ttwwwwwwwwwwtttt",
-    "ttwwwwwwwwwwtttt",
-    "tttwwwww wwwtttt",
-    "tttw wwww  wwttt",
-    "tttbb bbb  bbbtt",
-    "tttbb bbb  bbbtt"
-];
+    let pX = 200, pY = 400, vX = 0, vY = 0;
+    let jumpCount = 0, isDashing = false, dashReady = true;
+    const config = { gravity: 0.9, jump: -21, speed: 7.5, friction: 0.8, dashPower: 28 };
 
-const canvas = document.getElementById('screen');
-const ctx = canvas.getContext('2d');
-const dashFill = document.getElementById('dash-fill');
+    const plats = [
+        {x: 0, y: 150, w: 900}, {x: 1050, y: 300, w: 500}, {x: 1700, y: 450, w: 400}, 
+        {x: 2300, y: 300, w: 700}, {x: 3200, y: 500, w: 1200}
+    ];
 
-let width, height, scale;
-let pX = 100, pY = 200, vX = 0, vY = 0;
-let facing = 1, jumpCount = 0, isDashing = false, dashTimer = 0;
-const keys = { l: false, r: false };
+    plats.forEach(p => {
+        const d = document.createElement('div'); d.className = 'plat';
+        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'40px'});
+        document.getElementById('platforms').appendChild(d);
+    });
 
-const platforms = [
-    {x: 0, y: 500, w: 800}, {x: 900, y: 350, w: 400}, {x: 1400, y: 200, w: 500}, {x: 2000, y: 400, w: 800}
-];
+    const keys = { l: false, r: false };
+    const setup = (id, s, e) => {
+        const el = document.getElementById(id);
+        el.addEventListener('touchstart', (ev) => { ev.preventDefault(); s(); });
+        if(e) el.addEventListener('touchend', (ev) => { ev.preventDefault(); e(); });
+    };
 
-function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-    scale = 4; // Each "pixel" in the art is 4x4 on screen
-}
+    setup('lBtn', () => keys.l = true, () => keys.l = false);
+    setup('rBtn', () => keys.r = true, () => keys.r = false);
+    setup('jBtn', () => { 
+        if(jumpCount < 2) { 
+            vY = config.jump; jumpCount++; 
+            visual.style.transform = "scale(0.8, 1.3)";
+            setTimeout(() => visual.style.transform = "scale(1, 1)", 200);
+        } 
+    });
 
-function drawPixelSprite(x, y, sprite, flip, stretchX=1, stretchY=1) {
-    ctx.save();
-    ctx.translate(x, y);
-    if(flip === -1) ctx.scale(-1, 1);
-    
-    const pixelSize = scale;
-    
-    for(let row = 0; row < 16; row++) {
-        for(let col = 0; col < 16; col++) {
-            const char = sprite[row][col];
-            if(char !== 't') {
-                ctx.fillStyle = Colors[char];
-                // Apply squash and stretch to the draw call
-                ctx.fillRect(
-                    (col - 8) * pixelSize * stretchX, 
-                    (row - 16) * pixelSize * stretchY, 
-                    pixelSize * stretchX + 0.5, 
-                    pixelSize * stretchY + 0.5
-                );
+    setup('dBtn', () => {
+        if(dashReady) {
+            isDashing = true; dashReady = false;
+            let dir = player.style.transform.includes('-1') ? -1 : 1;
+            vX = dir * config.dashPower; vY = 0;
+            visual.style.transform = "scale(1.4, 0.7)";
+            dashBar.style.width = "0%";
+            
+            let t = setInterval(() => {
+                const g = visual.cloneNode(true); g.className = 'ghost';
+                g.style.left = pX + 'px'; g.style.bottom = pY + 'px';
+                world.appendChild(g); setTimeout(() => g.remove(), 400);
+            }, 40);
+
+            setTimeout(() => { isDashing = false; visual.style.transform = "scale(1, 1)"; clearInterval(t); }, 300);
+            setTimeout(() => { dashReady = true; dashBar.style.width = "100%"; }, 1200);
+        }
+    });
+
+    function update() {
+        if(!isDashing) {
+            vX = keys.l ? -config.speed : (keys.r ? config.speed : vX * config.friction);
+            vY += config.gravity;
+        }
+        pX += vX; pY -= vY;
+
+        let onGround = false;
+        plats.forEach(p => {
+            if (pX + 40 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY <= p.y + 40 && pY > p.y) {
+                    pY = p.y + 40; vY = 0; jumpCount = 0; onGround = true;
+                }
             }
-        }
+        });
+
+        if(Math.abs(vX) > 1 && onGround) player.classList.add('walking');
+        else player.classList.remove('walking');
+
+        if(vX > 0.5) player.style.transform = "scaleX(1)";
+        else if(vX < -0.5) player.style.transform = "scaleX(-1)";
+
+        // Smooth Camera + Parallax
+        let camX = -(pX - window.innerWidth/2);
+        world.style.transform = `translateX(${camX}px)`;
+        stars.style.transform = `translateX(${camX * 0.2}px)`;
+        city.style.transform = `translateX(${camX * 0.5}px)`;
+
+        player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
+
+        if(pY < -200) { pX = 200; pY = 400; vY = 0; }
+        requestAnimationFrame(update);
     }
-    ctx.restore();
-}
-
-function update() {
-    // Movement Logic
-    if(!isDashing) {
-        vX = keys.l ? -6 : (keys.r ? 6 : vX * 0.8);
-        vY += 0.8; // Gravity
-    }
-    
-    pX += vX; pY += vY;
-    if(keys.l) facing = -1;
-    if(keys.r) facing = 1;
-
-    // Collision
-    let grounded = false;
-    platforms.forEach(plat => {
-        if(pX > plat.x && pX < plat.x + plat.w && vY > 0 && pY >= plat.y && pY < plat.y + 30) {
-            pY = plat.y; vY = 0; jumpCount = 0; grounded = true;
-        }
-    });
-
-    // Drawing
-    ctx.fillStyle = '#08001a';
-    ctx.fillRect(0, 0, width, height);
-
-    // Camera follow
-    ctx.save();
-    ctx.translate(-pX + width/2, 0);
-
-    // Draw Platforms (Pixel style)
-    platforms.forEach(plat => {
-        ctx.fillStyle = '#ff0055';
-        ctx.fillRect(plat.x, plat.y, plat.w, 40);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(plat.x, plat.y, plat.w, 4); // Highlight
-    });
-
-    // Animation variables
-    let sX = 1, sY = 1;
-    if(!grounded) { sX = 0.8; sY = 1.2; } // Stretch when jumping
-    if(isDashing) { sX = 1.5; sY = 0.6; } // Squash when dashing
-
-    drawPixelSprite(pX, pY, hayaSprite, facing, sX, sY);
-
-    ctx.restore();
-
-    // Respawn
-    if(pY > height + 200) { pX = 100; pY = 200; vY = 0; }
-    
-    // UI
-    dashFill.style.width = dashTimer > 0 ? (100 - (dashTimer/30)*100) + "%" : "100%";
-    if(dashTimer > 0) dashTimer--;
-
-    requestAnimationFrame(update);
-}
-
-// Controls
-const setupBtn = (id, press, release) => {
-    const el = document.getElementById(id);
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); press(); });
-    if(release) el.addEventListener('touchend', (e) => { e.preventDefault(); release(); });
-};
-
-setupBtn('lBtn', () => keys.l = true, () => keys.l = false);
-setupBtn('rBtn', () => keys.r = true, () => keys.r = false);
-setupBtn('jBtn', () => { if(jumpCount < 2) { vY = -18; jumpCount++; } });
-setupBtn('aBtn', () => {
-    if(dashTimer === 0) {
-        isDashing = true; dashTimer = 40; vX = facing * 20; vY = 0;
-        setTimeout(() => isDashing = false, 200);
-    }
-});
-
-window.addEventListener('resize', resize);
-resize();
-update();
+    update();
 </script>
 </body>
 </html>
