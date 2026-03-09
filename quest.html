@@ -2,208 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Haya 3D: Ultra Detail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haya: The Cutscene</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
-        #ui { position: fixed; top: 20px; left: 20px; color: #00f2ff; z-index: 100; pointer-events: none; text-shadow: 0 0 10px #00f2ff; }
-        .stats { font-size: 12px; opacity: 0.7; letter-spacing: 2px; }
-        
-        #controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 200; box-sizing: border-box; }
-        .btn { width: 80px; height: 80px; background: rgba(0, 242, 255, 0.1); border: 2px solid #00f2ff; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; backdrop-filter: blur(10px); }
-        .btn-act { background: #ff0055; border: none; box-shadow: 0 0 20px #ff0055; }
-        
-        canvas { display: block; width: 100vw; height: 100vh; image-rendering: high-quality; }
+        :root { --primary: #00f2ff; --accent: #ff0055; --bg: #05020a; }
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+
+        /* Cinematic Bars */
+        .bar { position: fixed; width: 100%; height: 12vh; background: #000; z-index: 1000; transition: transform 1s ease; }
+        .top-bar { top: 0; transform: translateY(-100%); }
+        .bottom-bar { bottom: 0; transform: translateY(100%); }
+        .active .top-bar, .active .bottom-bar { transform: translateY(0); }
+
+        /* Scene Container */
+        #scene { 
+            position: relative; width: 100vw; height: 100vh; 
+            background: linear-gradient(to bottom, #0a0515, #1a0b2e);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* High-Detail Haya Portrait (Left Side) */
+        #portrait-container {
+            position: absolute; left: -100px; bottom: 0; width: 400px; height: 600px;
+            opacity: 0; transition: all 1s ease-out; z-index: 500;
+        }
+        .active #portrait-container { left: 50px; opacity: 1; }
+
+        /* Dialogue Box */
+        #dialogue-ui {
+            position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%);
+            width: 70vw; background: rgba(10, 5, 20, 0.9);
+            border: 2px solid var(--primary); padding: 30px; color: #fff;
+            opacity: 0; z-index: 1100; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+        .active #dialogue-ui { opacity: 1; transition-delay: 0.5s; }
+
+        .char-name { color: var(--primary); font-weight: bold; font-size: 24px; margin-bottom: 10px; letter-spacing: 2px; }
+        .text-content { font-size: 18px; line-height: 1.6; min-height: 60px; }
+
+        /* Visual Effects */
+        #glitch-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px);
+            pointer-events: none; z-index: 2000; opacity: 0.3;
+        }
+
+        /* Skip Button */
+        #skip { position: fixed; top: 30px; right: 30px; color: #fff; border: 1px solid #fff; padding: 10px 20px; cursor: pointer; z-index: 3000; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div style="font-size: 24px; font-weight: bold;">HAYA_v3.0_4K</div>
-    <div class="stats">SYSTEMS: ONLINE // NEURAL_LINK: ACTIVE</div>
+<div id="glitch-overlay"></div>
+<div id="skip">SKIP [SPACE]</div>
+
+<div id="scene">
+    <div class="bar top-bar"></div>
+    <div class="bar bottom-bar"></div>
+
+    <div id="portrait-container">
+        <svg width="400" height="600" viewBox="0 0 100 150">
+            <rect x="30" y="40" width="40" height="80" rx="10" fill="white" /> <circle cx="50" cy="30" r="18" fill="#ffe0bd" /> <path d="M32 25 Q 50 10 68 25 L 68 35 Q 50 45 32 35 Z" fill="#3d2b1f" /> <rect x="42" y="10" width="16" height="8" rx="2" fill="white" stroke="#ddd" /> <rect x="58" y="28" width="4" height="6" rx="2" fill="#111" /> </svg>
+    </div>
+
+    <div id="dialogue-ui">
+        <div class="char-name">HAYA // UNIT 01</div>
+        <div class="text-content" id="typewriter"></div>
+    </div>
 </div>
 
-<div id="controls">
-    <div style="display:flex; gap:20px;"><div class="btn" id="lBtn">◀</div><div class="btn" id="rBtn">▶</div></div>
-    <div style="display:flex; gap:20px;"><div class="btn btn-act" id="dBtn">⚡</div><div class="btn" id="jBtn">▲</div></div>
-</div>
+<script>
+    const script = [
+        { name: "HAYA", text: "Neural link established... Heart rate stabilizing." },
+        { name: "SYSTEM", text: "WARNING: Clinic Sector 7 has been breached. Biological threats detected." },
+        { name: "HAYA", text: "Understood. Preparing the plasma infusion. It's time for their... check-up." }
+    ];
 
-<script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-</script>
+    let currentStep = 0;
+    const typewriter = document.getElementById('typewriter');
+    const scene = document.getElementById('scene');
 
-<script type="module">
-import * as THREE from 'three';
-
-// --- INITIALIZATION ---
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020005);
-scene.fog = new THREE.FogExp2(0x020005, 0.05);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 4K Simulation
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
-
-// --- LIGHTING ---
-const ambient = new THREE.AmbientLight(0x404040, 2);
-scene.add(ambient);
-
-const moonLight = new THREE.DirectionalLight(0x00f2ff, 2);
-moonLight.position.set(10, 20, 10);
-moonLight.castShadow = true;
-scene.add(moonLight);
-
-// --- NURSE HAYA 3D MODEL (PROCEDURAL) ---
-const nurseGroup = new THREE.Group();
-
-// Detailed Body (Dress)
-const bodyGeo = new THREE.CylinderGeometry(0.5, 0.8, 1.8, 16);
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-const body = new THREE.Mesh(bodyGeo, bodyMat);
-body.position.y = 0.9;
-body.castShadow = true;
-nurseGroup.add(body);
-
-// Head
-const headGeo = new THREE.SphereGeometry(0.4, 32, 32);
-const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-const head = new THREE.Mesh(headGeo, headMat);
-head.position.y = 2.1;
-nurseGroup.add(head);
-
-// Hair (Detailed 3D clumps)
-const hairGeo = new THREE.CapsuleGeometry(0.45, 0.2, 4, 16);
-const hairMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f });
-const hair = new THREE.Mesh(hairGeo, hairMat);
-hair.position.y = 2.2;
-nurseGroup.add(hair);
-
-// Nurse Cap
-const capGeo = new THREE.BoxGeometry(0.4, 0.2, 0.3);
-const cap = new THREE.Mesh(capGeo, bodyMat);
-cap.position.set(0, 2.5, 0);
-nurseGroup.add(cap);
-
-// Glowing Plasma Syringe
-const syringeGroup = new THREE.Group();
-const needleGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8);
-const needleMat = new THREE.MeshStandardMaterial({ 
-    color: 0x00ffff, 
-    emissive: 0x00ffff, 
-    emissiveIntensity: 5 
-});
-const needle = new THREE.Mesh(needleGeo, needleMat);
-syringeGroup.add(needle);
-
-const pointLight = new THREE.PointLight(0x00ffff, 2, 5);
-syringeGroup.add(pointLight);
-
-syringeGroup.position.set(0.8, 1.2, 0.5);
-nurseGroup.add(syringeGroup);
-
-scene.add(nurseGroup);
-
-// --- WORLD DESIGN ---
-const floorGeo = new THREE.PlaneGeometry(1000, 20);
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.5 });
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// Neon Platforms
-const platforms = [];
-for(let i=0; i<20; i++) {
-    const pGeo = new THREE.BoxGeometry(10, 1, 4);
-    const pMat = new THREE.MeshStandardMaterial({ color: 0x1a0b2e });
-    const p = new THREE.Mesh(pGeo, pMat);
-    p.position.set(i * 15, Math.random() * 5 + 2, 0);
-    p.castShadow = true;
-    p.receiveShadow = true;
-    scene.add(p);
-    platforms.push(p);
-    
-    // Add neon trim
-    const trimGeo = new THREE.BoxGeometry(10.1, 0.2, 4.1);
-    const trimMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-    const trim = new THREE.Mesh(trimGeo, trimMat);
-    p.add(trim);
-    trim.position.y = 0.5;
-}
-
-// --- GAME LOGIC ---
-let pX = 0, pY = 0, vX = 0, vY = 0;
-let isGrounded = false, jumpCount = 0;
-const keys = { l: false, r: false };
-
-camera.position.set(0, 5, 15);
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    // Physics
-    vX = keys.l ? -0.15 : (keys.r ? 0.15 : vX * 0.9);
-    vY -= 0.015; // Gravity
-    pX += vX; pY += vY;
-
-    // Ground/Platform Collision
-    isGrounded = false;
-    if(pY <= 0) { pY = 0; vY = 0; isGrounded = true; jumpCount = 0; }
-    
-    platforms.forEach(p => {
-        if(Math.abs(pX - p.position.x) < 5 && pY >= p.position.y + 0.5 && pY + vY <= p.position.y + 1) {
-            pY = p.position.y + 1; vY = 0; isGrounded = true; jumpCount = 0;
-        }
-    });
-
-    // Model Updates
-    nurseGroup.position.set(pX, pY, 0);
-    
-    // Smooth Tilt & Rotation
-    if(keys.l) nurseGroup.rotation.y = -Math.PI/2;
-    if(keys.r) nurseGroup.rotation.y = Math.PI/2;
-    
-    // "Immersive" Procedural Animation (Squash/Stretch/Bob)
-    const time = Date.now() * 0.005;
-    if(Math.abs(vX) > 0.01 && isGrounded) {
-        nurseGroup.rotation.z = Math.sin(time * 2) * 0.1; // Walking sway
-        nurseGroup.scale.y = 1 + Math.sin(time * 4) * 0.05; // Walking bob
-    } else if(!isGrounded) {
-        nurseGroup.scale.y = 1.2; nurseGroup.scale.x = 0.8; // Stretching in air
-    } else {
-        nurseGroup.scale.set(1, 1, 1);
-        nurseGroup.rotation.z = 0;
+    function typeText(text) {
+        typewriter.innerHTML = "";
+        let i = 0;
+        const interval = setInterval(() => {
+            typewriter.innerHTML += text[i];
+            i++;
+            if (i >= text.length) clearInterval(interval);
+        }, 30);
     }
 
-    // Camera Cinematic Follow
-    camera.position.x += (pX - camera.position.x) * 0.05;
-    camera.lookAt(pX, pY + 2, 0);
+    function nextStep() {
+        if (currentStep < script.length) {
+            const entry = script[currentStep];
+            document.querySelector('.char-name').innerText = entry.name;
+            typeText(entry.text);
+            currentStep++;
+        } else {
+            // End of cutscene
+            scene.classList.remove('active');
+            typewriter.innerHTML = "SYSTEM LOADING...";
+        }
+    }
 
-    renderer.render(scene, camera);
-}
+    // Initialize Cutscene
+    setTimeout(() => {
+        scene.classList.add('active');
+        nextStep();
+    }, 500);
 
-// --- INPUTS ---
-const setupBtn = (id, s, e) => {
-    const el = document.getElementById(id);
-    el.addEventListener('touchstart', (ev) => { ev.preventDefault(); s(); });
-    if(e) el.addEventListener('touchend', (ev) => { ev.preventDefault(); e(); });
-};
-
-setupBtn('lBtn', () => keys.l = true, () => keys.l = false);
-setupBtn('rBtn', () => keys.r = true, () => keys.r = false);
-setupBtn('jBtn', () => { if(jumpCount < 2) { vY = 0.4; jumpCount++; } });
-setupBtn('dBtn', () => { vX = (nurseGroup.rotation.y > 0 ? 1 : -1) * 0.8; });
-
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-animate();
+    window.addEventListener('click', nextStep);
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') nextStep(); });
 </script>
 </body>
 </html>
