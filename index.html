@@ -34,10 +34,9 @@
         #game-ui { position: absolute; top: 20px; left: 20px; font-size: 18px; color: #ff4d6d; font-weight: bold; }
         #health-ui { position: absolute; top: 20px; right: 20px; font-size: 18px; letter-spacing: 3px; }
         
-        /* The Core Falling Animation */
         .falling-item { 
             position: absolute; 
-            top: -100px; /* Start well above the screen */
+            top: -100px; 
             padding: 25px; 
             cursor: pointer; 
             user-select: none; 
@@ -49,27 +48,12 @@
         }
 
         .heart-item { font-size: 45px; }
-        
-        .power-up-item { 
-            font-size: 55px; 
-            filter: drop-shadow(0 0 15px gold); 
-        }
+        .power-up-item { font-size: 55px; filter: drop-shadow(0 0 15px gold); }
 
-        /* Container for the spin to avoid clashing with fall */
-        .spinner {
-            display: inline-block;
-            animation: spin 2s infinite linear;
-        }
+        .spinner { display: inline-block; animation: spin 2s infinite linear; }
         
-        @keyframes fall { 
-            from { top: -100px; }
-            to { top: 110vh; } 
-        }
-        
-        @keyframes spin { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
+        @keyframes fall { from { top: -100px; } to { top: 110vh; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         /* Envelope & Message */
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
@@ -101,19 +85,19 @@
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
-        <p class="sub-text">Prove your love to unlock the letter</p>
+        <p class="sub-text">Collect 50 love points to unlock the letter</p>
         <div id="counter">Loading...</div>
         <button class="btn-main" onclick="startGame()">Start Challenge</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">Love Collected: <span id="score">0</span> / 20</div>
+        <div id="game-ui">Love Collected: <span id="score">0</span> / 50</div>
         <div id="health-ui">❤️❤️❤️</div>
     </div>
 
     <div id="envelope-container">
         <div class="envelope"></div>
-        <p style="color: #ffd6e0; margin-bottom: 20px; font-size: 18px;">Challenge Complete!</p>
+        <p style="color: #ffd6e0; margin-bottom: 20px; font-size: 18px;">Haya, you did it! ❤️</p>
         <button class="btn-main" onclick="openLetter()">Open My Letter</button>
     </div>
 
@@ -146,7 +130,7 @@
         let score = 0;
         let lives = 3;
         let gameActive = false;
-        const targetScore = 20;
+        const targetScore = 50;
 
         function startGame() {
             document.getElementById("start-screen").style.display = "none";
@@ -157,25 +141,19 @@
 
         function spawnLoop() {
             if (!gameActive) return;
-            const isPowerUp = Math.random() > 0.85; 
+            const isPowerUp = Math.random() > 0.82; // Slightly more stars to help reach 50
             spawnItem(isPowerUp);
-            const delay = Math.max(350, 950 - (score * 25));
+            // Dynamic delay that gets faster as score increases
+            const delay = Math.max(300, 850 - (score * 10)); 
             setTimeout(spawnLoop, delay);
         }
 
         function spawnItem(isPowerUp) {
             const h = document.createElement("div");
             h.className = "falling-item " + (isPowerUp ? "power-up-item" : "heart-item");
-            
-            // Wrap power-up in a spinner div so the rotation doesn't break the fall
-            if(isPowerUp) {
-                h.innerHTML = '<div class="spinner">⭐</div>';
-            } else {
-                h.innerHTML = "❤️";
-            }
-
+            if(isPowerUp) { h.innerHTML = '<div class="spinner">⭐</div>'; } else { h.innerHTML = "❤️"; }
             h.style.left = Math.random() * 80 + 10 + "vw";
-            const speed = isPowerUp ? 1.7 : (Math.random() * 1.5 + 2);
+            const speed = isPowerUp ? 1.6 : (Math.random() * 1.2 + 1.8);
             h.style.animationDuration = speed + "s";
             
             const catchItem = (e) => {
