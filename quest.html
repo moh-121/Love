@@ -5,68 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rescue Mohammed! ❤️</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background: #05000a; font-family: -apple-system, sans-serif; height: 100vh; touch-action: none; }
         
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #world { position: absolute; width: 3500px; height: 100%; background: linear-gradient(to bottom, #110022 0%, #440011 100%); transition: transform 0.1s linear; }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; perspective: 1000px; }
+        #world { position: absolute; width: 4000px; height: 100%; background: linear-gradient(to bottom, #110022 0%, #440011 100%); transition: transform 0.5s ease-out; }
 
-        #hud { position: fixed; top: 30px; width: 100%; text-align: center; color: white; z-index: 100; font-size: 22px; text-shadow: 0 0 10px #ff4d6d; pointer-events: none; font-weight: bold; }
+        /* HUD */
+        #hud { position: fixed; top: 40px; width: 100%; text-align: center; color: white; z-index: 100; font-size: 22px; text-shadow: 0 0 10px #ff4d6d; pointer-events: none; font-weight: bold; transition: opacity 0.5s; }
 
         /* CHARACTERS */
-        .char { position: absolute; width: 40px; height: 55px; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+        .char { position: absolute; width: 45px; height: 60px; z-index: 50; display: flex; align-items: flex-end; justify-content: center; transition: filter 0.3s; }
         
-        /* Haya (The Nurse) */
-        .haya-body { width: 36px; height: 45px; background: #f8f9fa; border-radius: 10px 10px 2px 2px; position: absolute; bottom: 6px; box-shadow: inset -4px -4px 0 rgba(0,0,0,0.1); }
-        .stethoscope { position: absolute; width: 20px; height: 18px; border: 2.5px solid #444; border-radius: 50%; top: 4px; left: 8px; border-top-color: transparent; }
-        .cross { color: #ff4d6d; font-size: 12px; position: absolute; top: 22px; left: 13px; font-weight: 900; }
-        
-        /* Mohammed (The Goal) */
-        .mo-body { width: 36px; height: 45px; background: #2c3e50; border-radius: 10px 10px 2px 2px; position: absolute; bottom: 6px; border-top: 15px solid #5d4037; }
-        .mo-eyes { position: absolute; top: 18px; width: 100%; text-align: center; color: white; font-size: 10px; font-weight: bold; }
+        /* Haya (Nurse) */
+        .haya-body { width: 38px; height: 48px; background: #fff; border-radius: 12px 12px 2px 2px; position: absolute; bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stethoscope { position: absolute; width: 22px; height: 20px; border: 2.5px solid #333; border-radius: 50%; top: 4px; left: 8px; border-top-color: transparent; }
+        .cross { color: #ff4d6d; font-size: 14px; position: absolute; top: 20px; left: 13px; font-weight: 900; }
 
-        .foot { width: 14px; height: 8px; background: #111; border-radius: 2px; position: absolute; bottom: 0; }
-        .foot-l { left: 4px; } .foot-r { right: 4px; }
+        /* Mohammed (Fixed Design) */
+        .mo-body { width: 40px; height: 52px; background: #1a1a1a; border-radius: 10px 10px 2px 2px; position: absolute; bottom: 8px; border-top: 18px solid #3d2b1f; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .mo-shirt { position: absolute; width: 12px; height: 20px; background: #34495e; top: 18px; left: 14px; border-radius: 2px; }
+        .face { width: 100%; text-align: center; color: white; font-size: 11px; font-weight: bold; position: absolute; top: 18px; z-index: 2; }
+
+        .foot { width: 14px; height: 10px; background: #111; border-radius: 3px; position: absolute; bottom: 0; }
+        .foot-l { left: 6px; } .foot-r { right: 6px; }
+
+        /* Cutscene Elements */
+        #cutscene-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0); pointer-events: none; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: background 2s; }
+        .love-msg { font-family: 'Caveat', cursive; font-size: 50px; color: white; opacity: 0; transform: scale(0.5); transition: 1.5s all cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 0 20px #ff4d6d; }
+        .heart-particle { position: absolute; font-size: 30px; pointer-events: none; z-index: 1001; animation: heartFloat 2s forwards ease-out; }
+        @keyframes heartFloat { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
 
         /* Level Elements */
-        .platform { position: absolute; background: #ff758c; border-radius: 4px; border-bottom: 6px solid #a30026; z-index: 10; }
-        .kiss-bubble { position: absolute; font-size: 40px; top: -50px; opacity: 0; transition: 0.5s; pointer-events: none; }
-
+        .platform { position: absolute; background: #ff758c; border-radius: 6px; border-bottom: 8px solid #a30026; z-index: 10; }
+        
         /* Controls */
-        #controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 200; }
-        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 2px solid rgba(255,255,255,0.3); backdrop-filter: blur(8px); color: white; }
-        .heal-btn { width: 110px; background: #ff4d6d; border: none; font-weight: bold; font-size: 20px; box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4); }
+        #controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 200; transition: transform 0.5s; }
+        .btn { width: 85px; height: 85px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; border: 2px solid rgba(255,255,255,0.4); backdrop-filter: blur(10px); color: white; }
+        .heal-btn { width: 120px; border-radius: 30px; background: linear-gradient(to bottom, #ff4d6d, #ff758c); border: none; font-weight: bold; font-size: 22px; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="hud">Haya, come find Mohammed! ❤️</div>
+        <div id="hud">Mohammed is waiting at the end! ❤️</div>
         <div id="world">
             <div id="player" class="char">
-                <div class="haya-body">
-                    <div class="stethoscope"></div>
-                    <div class="cross">✚</div>
-                </div>
-                <div class="foot foot-l"></div>
-                <div class="foot foot-r"></div>
+                <div class="haya-body"><div class="stethoscope"></div><div class="cross">✚</div></div>
+                <div class="foot foot-l"></div><div class="foot foot-r"></div>
             </div>
 
-            <div id="mohammed" class="char" style="left: 3300px; bottom: 150px;">
-                <div class="mo-body">
-                    <div class="mo-eyes">^ _ ^</div>
-                    <div id="kiss" class="kiss-bubble">💋😘</div>
-                </div>
-                <div class="foot foot-l"></div>
-                <div class="foot foot-r"></div>
+            <div id="mohammed" class="char" style="left: 3600px; bottom: 150px;">
+                <div class="mo-body"><div class="mo-shirt"></div><div class="face">^ _ ^</div></div>
+                <div class="foot foot-l"></div><div class="foot foot-r"></div>
             </div>
-
             <div id="platforms-layer"></div>
         </div>
 
         <div id="controls">
-            <div style="display:flex; gap:15px;">
+            <div style="display:flex; gap:20px;">
                 <div class="btn" id="lBtn">⬅️</div>
                 <div class="btn" id="rBtn">➡️</div>
             </div>
@@ -74,40 +72,35 @@
         </div>
     </div>
 
+    <div id="cutscene-overlay"><div class="love-msg" id="final-msg">You Rescued My Heart ❤️</div></div>
+
     <script>
         const world = document.getElementById('world');
         const player = document.getElementById('player');
         const mo = document.getElementById('mohammed');
-        const kiss = document.getElementById('kiss');
+        const overlay = document.getElementById('cutscene-overlay');
+        const msg = document.getElementById('final-msg');
         
-        let pX = 100, pY = 400;
-        let vX = 0, vY = 0;
-        let isGrounded = false;
-        let camX = 0;
-        let won = false;
+        let pX = 150, pY = 400, vX = 0, vY = 0, isGrounded = false, camX = 0, won = false;
+        const config = { gravity: 0.9, jump: -22, speed: 9, charW: 45, charH: 60 };
 
-        const config = { gravity: 0.9, jump: -21, speed: 8.5, charW: 40, charH: 55 };
-
-        // LEVEL DESIGN
         const level = [
-            {x: 0, y: 100, w: 500, h: 40},
-            {x: 650, y: 180, w: 200, h: 20},
-            {x: 950, y: 300, w: 250, h: 20},
-            {x: 1300, y: 220, w: 200, h: 20},
-            {x: 1600, y: 380, w: 150, h: 20},
-            {x: 1900, y: 250, w: 300, h: 20},
-            {x: 2300, y: 450, w: 200, h: 20},
-            {x: 2650, y: 320, w: 200, h: 20},
-            {x: 3000, y: 150, w: 500, h: 40} // Platform where Mohammed is
+            {x: 0, y: 100, w: 600, h: 40},
+            {x: 750, y: 220, w: 250, h: 20},
+            {x: 1100, y: 350, w: 200, h: 20},
+            {x: 1400, y: 250, w: 300, h: 20},
+            {x: 1800, y: 400, w: 200, h: 20},
+            {x: 2150, y: 280, w: 250, h: 20},
+            {x: 2550, y: 450, w: 200, h: 20},
+            {x: 2900, y: 320, w: 250, h: 20},
+            {x: 3300, y: 150, w: 700, h: 40}
         ];
 
         level.forEach(p => {
             const d = document.createElement('div');
             d.className = 'platform';
-            d.style.left = p.x + 'px';
-            d.style.bottom = p.y + 'px';
-            d.style.width = p.w + 'px';
-            d.style.height = p.h + 'px';
+            d.style.left = p.x + 'px'; d.style.bottom = p.y + 'px';
+            d.style.width = p.w + 'px'; d.style.height = p.h + 'px';
             document.getElementById('platforms-layer').appendChild(d);
         });
 
@@ -121,52 +114,65 @@
         setupBtn('rBtn', () => { if(!won) vX = config.speed; player.style.transform = 'scaleX(1)'; }, () => vX = 0);
         setupBtn('jBtn', () => { if(isGrounded && !won) { vY = config.jump; isGrounded = false; } }, () => {});
 
+        function startCutscene() {
+            won = true; vX = 0;
+            document.getElementById('controls').style.transform = 'translateY(200px)';
+            document.getElementById('hud').style.opacity = '0';
+            
+            // Zoom camera in on the couple
+            camX = -(3600 - window.innerWidth / 2 + 20);
+            world.style.transition = 'transform 2s cubic-bezier(0.4, 0, 0.2, 1)';
+            world.style.transform = `translateX(${camX}px) scale(1.5)`;
+            
+            setTimeout(() => {
+                overlay.style.background = 'rgba(0,0,0,0.4)';
+                for(let i=0; i<30; i++) {
+                    setTimeout(createHeart, i * 50);
+                }
+                setTimeout(() => {
+                    msg.style.opacity = '1';
+                    msg.style.transform = 'scale(1)';
+                }, 1000);
+                setTimeout(() => window.location.href = "index.html", 4500);
+            }, 1000);
+        }
+
+        function createHeart() {
+            const h = document.createElement('div');
+            h.className = 'heart-particle';
+            h.innerHTML = Math.random() > 0.5 ? '❤️' : '💖';
+            h.style.left = (window.innerWidth / 2) + 'px';
+            h.style.top = (window.innerHeight / 2) + 'px';
+            h.style.setProperty('--x', (Math.random() - 0.5) * 600 + 'px');
+            h.style.setProperty('--y', (Math.random() - 0.5) * 600 + 'px');
+            document.body.appendChild(h);
+            setTimeout(() => h.remove(), 2000);
+        }
+
         function update() {
-            pX += vX;
-            vY += config.gravity;
-            pY += vY;
+            pX += vX; vY += config.gravity; pY += vY;
+            if(pX < 0) pX = 0; if(pX > 3900) pX = 3900;
+            if(pY > window.innerHeight + 100) { pX = 150; pY = 400; vY = 0; }
 
-            if(pX < 0) pX = 0;
-            if(pX > 3400) pX = 3400;
-
-            // Fall Reset
-            if(pY > window.innerHeight + 100) {
-                pX = 100; pY = 400; vY = 0;
-            }
-
-            // Collisions
             isGrounded = false;
             level.forEach(p => {
                 let pTop = window.innerHeight - p.y - p.h - config.charH;
                 if(vY >= 0 && pX + 30 > p.x && pX < p.x + p.w - 10) {
-                    if(pY >= pTop - 15 && pY <= pTop + 10) {
-                        pY = pTop; vY = 0; isGrounded = true;
-                    }
+                    if(pY >= pTop - 15 && pY <= pTop + 15) { pY = pTop; vY = 0; isGrounded = true; }
                 }
             });
 
-            // Camera
-            camX = -(pX - window.innerWidth / 3);
-            if(camX > 0) camX = 0;
-            if(camX < -(3500 - window.innerWidth)) camX = -(3500 - window.innerWidth);
-            
-            world.style.transform = `translateX(${camX}px)`;
+            if(!won) {
+                camX = -(pX - window.innerWidth / 3);
+                if(camX > 0) camX = 0;
+                if(camX < -(4000 - window.innerWidth)) camX = -(4000 - window.innerWidth);
+                world.style.transform = `translateX(${camX}px)`;
+            }
+
             player.style.left = pX + 'px';
             player.style.top = pY + 'px';
 
-            // WIN CONDITION: Distance to Mohammed
-            let dist = Math.abs(pX - 3300);
-            if(dist < 40 && isGrounded && !won) {
-                won = true;
-                vX = 0;
-                kiss.style.opacity = "1";
-                kiss.style.transform = "translateY(-30px)";
-                setTimeout(() => {
-                    alert("Muah! ❤️ You rescued Mohammed!");
-                    window.location.href = "index.html";
-                }, 1500);
-            }
-
+            if(Math.abs(pX - 3560) < 30 && isGrounded && !won) startCutscene();
             requestAnimationFrame(update);
         }
         update();
