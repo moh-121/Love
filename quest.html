@@ -11,16 +11,32 @@
         
         #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
-        /* PARALLAX LAYERS */
+        /* Hit Effect Animation */
+        .shake { animation: shake 0.3s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Parallax Backgrounds */
         .bg-layer { position: absolute; top: 0; left: 0; height: 100%; will-change: transform; }
-        #stars { width: 6000px; background: radial-gradient(circle, #fff 1px, transparent 1px) 0 0 / 50px 50px; opacity: 0.3; }
+        #stars { width: 6000px; background: radial-gradient(circle, #fff 1px, transparent 1px) 0 0 / 60px 60px; opacity: 0.2; }
         #city { width: 6000px; background: linear-gradient(to top, #1a0033 0%, transparent 40%); bottom: 0; }
 
         #world { position: absolute; width: 5000px; height: 100%; will-change: transform; z-index: 10; }
 
-        /* CHARACTERS */
-        .char { position: absolute; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; transition: transform 0.1s; }
-        .haya-body { width: 38px; height: 48px; background: #fff; border-radius: 12px 12px 2px 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; }
+        /* Health Indicator */
+        #ui-top-right { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 500; }
+        .heart { font-size: 30px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .heart.lost { opacity: 0.2; transform: scale(0.5); }
+
+        /* Characters */
+        .char { position: absolute; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; will-change: transform; }
+        .haya-body { width: 38px; height: 48px; background: #fff; border-radius: 12px 12px 2px 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; transition: background 0.2s; }
+        .invincible { opacity: 0.6; animation: flicker 0.1s infinite; }
+        @keyframes flicker { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
+
         .stethoscope { position: absolute; width: 22px; height: 20px; border: 2.5px solid #333; border-radius: 50%; top: 4px; left: 8px; border-top-color: transparent; }
         .cross { color: #ff4d6d; font-size: 14px; position: absolute; top: 20px; left: 13px; font-weight: 900; }
         
@@ -30,11 +46,11 @@
         .feet { display: flex; justify-content: space-between; width: 30px; margin-top: -2px; }
         .foot { width: 12px; height: 8px; background: #111; border-radius: 2px; }
 
-        /* PLATFORMS & TRAPS */
+        /* Platforms */
         .platform { position: absolute; background: #ff758c; border-top: 4px solid #ffafbd; border-bottom: 12px solid #a30026; border-radius: 4px; z-index: 10; }
         .spike { position: absolute; width: 36px; height: 26px; background: #7f8c8d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); z-index: 5; }
 
-        /* UI */
+        /* UI Controls */
         #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 200; }
         .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid white; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 30px; backdrop-filter: blur(5px); }
         .jump-btn { width: 120px; border-radius: 30px; background: #ff4d6d; font-weight: bold; border: none; box-shadow: 0 6px #a30026; }
@@ -46,12 +62,18 @@
 <body>
 
     <div id="game-container">
+        <div id="ui-top-right">
+            <div class="heart" id="h1">❤️</div>
+            <div class="heart" id="h2">❤️</div>
+            <div class="heart" id="h3">❤️</div>
+        </div>
+
         <div id="stars" class="bg-layer"></div>
         <div id="city" class="bg-layer"></div>
         
         <div id="world">
             <div id="player" class="char">
-                <div class="haya-body"><div class="stethoscope"></div><div class="cross">✚</div></div>
+                <div id="haya-inner" class="haya-body"><div class="stethoscope"></div><div class="cross">✚</div></div>
                 <div class="feet"><div class="foot"></div><div class="foot"></div></div>
             </div>
 
@@ -72,16 +94,16 @@
 
     <script>
         const world = document.getElementById('world');
-        const stars = document.getElementById('stars');
-        const city = document.getElementById('city');
+        const container = document.getElementById('game-container');
         const player = document.getElementById('player');
-        const mo = document.getElementById('mohammed');
+        const hayaBody = document.getElementById('haya-inner');
         const msg = document.getElementById('msg');
 
         let pX = 150, pY = 400, vX = 0, vY = 0, isGrounded = false, won = false;
+        let health = 3, isInvincible = false;
         let camX = 0, targetCamX = 0;
         
-        const config = { gravity: 1.1, jump: -23, speed: 9, friction: 0.8, charW: 45, charH: 60 };
+        const config = { gravity: 1.1, jump: -23, speed: 9, friction: 0.8 };
 
         const platforms = [
             {x: 0, y: 150, w: 700}, {x: 850, y: 280, w: 250}, {x: 1200, y: 380, w: 200},
@@ -114,9 +136,46 @@
             e.preventDefault(); if(isGrounded && !won) { vY = config.jump; isGrounded = false; }
         });
 
+        function takeDamage() {
+            if(isInvincible || won) return;
+            health--;
+            isInvincible = true;
+            
+            // Visual feedback
+            document.getElementById(`h${health + 1}`).classList.add('lost');
+            container.classList.add('shake');
+            hayaBody.classList.add('invincible');
+            hayaBody.style.background = "#ff4d6d"; // Flash red
+            
+            // Knockback
+            vY = -10;
+            vX = keys.right ? -15 : 15;
+
+            setTimeout(() => container.classList.remove('shake'), 300);
+            setTimeout(() => {
+                hayaBody.style.background = "#fff";
+            }, 200);
+
+            if(health <= 0) {
+                resetGame();
+            } else {
+                setTimeout(() => {
+                    isInvincible = false;
+                    hayaBody.classList.remove('invincible');
+                }, 1500);
+            }
+        }
+
+        function resetGame() {
+            health = 3;
+            pX = 150; pY = 400; vY = 0; vX = 0;
+            isInvincible = false;
+            hayaBody.classList.remove('invincible');
+            document.querySelectorAll('.heart').forEach(h => h.classList.remove('lost'));
+        }
+
         function update() {
             if(!won) {
-                // Movement with slight momentum
                 if(keys.left) vX = -config.speed;
                 else if(keys.right) vX = config.speed;
                 else vX *= config.friction;
@@ -124,7 +183,6 @@
                 vY += config.gravity;
                 pX += vX; pY -= vY;
 
-                // Collision
                 isGrounded = false;
                 platforms.forEach(p => {
                     if (pX + 30 > p.x && pX + 10 < p.x + p.w) {
@@ -135,31 +193,29 @@
                     }
                 });
 
-                // Spike reset
                 document.querySelectorAll('.spike').forEach(s => {
                     const sR = s.getBoundingClientRect(); const pR = player.getBoundingClientRect();
                     if(!(pR.right < sR.left + 8 || pR.left > sR.right - 8 || pR.bottom < sR.top || pR.top > sR.bottom)) {
-                        pX = 150; pY = 500; vY = 0;
+                        takeDamage();
                     }
                 });
 
-                if(pY < -100) { pX = 150; pY = 500; vY = 0; }
+                if(pY < -100) resetGame();
                 if(pX < 0) pX = 0; if(pX > 4300) pX = 4300;
 
-                // CAMERA SMOOTHING (LERP)
                 targetCamX = -(pX - window.innerWidth / 2 + 22);
                 if(targetCamX > 0) targetCamX = 0;
                 if(targetCamX < -(4400 - window.innerWidth)) targetCamX = -(4400 - window.innerWidth);
-                
-                // This is the magic: 0.1 makes the camera "lazy" so it follows her
                 camX += (targetCamX - camX) * 0.1;
 
                 world.style.transform = `translateX(${camX}px)`;
-                stars.style.transform = `translateX(${camX * 0.2}px)`; // Parallax stars
-                city.style.transform = `translateX(${camX * 0.5}px)`;  // Parallax city
+                document.getElementById('stars').style.transform = `translateX(${camX * 0.2}px)`;
+                document.getElementById('city').style.transform = `translateX(${camX * 0.5}px)`;
 
-                // Juice: Tilt character when running
-                player.style.transform = `scaleX(${vX > 0.5 ? 1 : vX < -0.5 ? -1 : 1}) rotate(${vX * 1.5}deg)`;
+                // Fixed Tilt: Leans into movement correctly
+                let tilt = vX * 2;
+                let flip = vX < -0.5 ? -1 : 1;
+                player.style.transform = `scaleX(${flip}) rotate(${tilt * flip}deg)`;
                 
                 player.style.left = pX + 'px';
                 player.style.bottom = pY + 'px';
@@ -168,9 +224,9 @@
                     won = true;
                     document.getElementById('controls').style.opacity = '0';
                     setTimeout(() => {
-                        player.style.transition = mo.style.transition = "bottom 5s ease-in-out, left 5s ease-in-out";
-                        player.style.bottom = mo.style.bottom = "60vh";
-                        player.style.left = "4180px"; mo.style.left = "4215px";
+                        player.style.transition = document.getElementById('mohammed').style.transition = "bottom 5s ease-in-out, left 5s ease-in-out";
+                        player.style.bottom = document.getElementById('mohammed').style.bottom = "60vh";
+                        player.style.left = "4180px"; document.getElementById('mohammed').style.left = "4215px";
                         document.getElementById('overlay').style.background = "rgba(10,0,20,0.8)";
                         setTimeout(() => msg.style.opacity = "1", 2000);
                         setTimeout(() => window.location.href = "index.html", 8000);
