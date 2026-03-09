@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>For Haya ❤️</title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+background:black;
+color:white;
+font-family:Arial;
+text-align:center;
+overflow:hidden;
+}
+
+h1{
+font-size:50px;
+color:#ff4d6d;
+}
+
+button{
+padding:15px 25px;
+font-size:18px;
+background:#ff4d6d;
+color:white;
+border:none;
+border-radius:12px;
+cursor:pointer;
+margin-top:20px;
+}
+
+#message{
+margin-top:25px;
+max-width:650px;
+font-size:20px;
+color:#ffd6e0;
+opacity:0;
+transition:1s;
+}
+
+#question{
+margin-top:40px;
+font-size:22px;
+opacity:0;
+}
+
+/* النجوم */
+
+.star{
+position:absolute;
+width:2px;
+height:2px;
+background:white;
+animation:twinkle 3s infinite;
+}
+
+@keyframes twinkle{
+0%{opacity:0}
+50%{opacity:1}
+100%{opacity:0}
+}
+
+/* القلوب */
+
+.heart{
+position:absolute;
+font-size:24px;
+animation:float 3s linear forwards;
+}
+
+@keyframes float{
+0%{
+transform:translateY(0);
+opacity:1;
+}
+100%{
+transform:translateY(-300px);
+opacity:0;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>For Haya ❤️</h1>
+
+<p>I told you I love you on <b>December 15, 2025</b></p>
+
+<p id="counter"></p>
+
+<button onclick="showLove()">Click here</button>
+
+<p id="message"></p>
+
+<div id="question">
+💍 Will you stay with me forever?
+</div>
+
+<script>
+
+/* العداد */
+
+const start = new Date("2025-12-15").getTime();
+
+setInterval(function(){
+
+let now = new Date().getTime();
+let diff = now - start;
+
+let days = Math.floor(diff / (1000*60*60*24));
+let hours = Math.floor((diff % (1000*60*60*24))/(1000*60*60));
+
+document.getElementById("counter").innerHTML =
+days + " days and " + hours + " hours since I told you I love you";
+
+},1000);
+
+
+/* الرسالة */
+
+function showLove(){
+
+document.getElementById("message").style.opacity=1;
+
+document.getElementById("message").innerHTML =
+"With each passing day, my love for you grows stronger, and with each call, I love your voice even more. I feel like you've become a part of me, an essential part of my personality, something I don't want to lose. I'm so lucky to be able to call you mine.";
+
+document.getElementById("question").style.opacity=1;
+
+createHearts();
+
+}
+
+
+/* القلوب */
+
+function createHearts(){
+
+for(let i=0;i<30;i++){
+
+let heart=document.createElement("div");
+heart.className="heart";
+heart.innerHTML="❤️";
+
+heart.style.left=Math.random()*100+"vw";
+heart.style.top="80vh";
+
+document.body.appendChild(heart);
+
+setTimeout(()=>{
+heart.remove();
+},3000);
+
+}
+
+}
+
+
+/* النجوم */
+
+for(let i=0;i<150;i++){
+
+let star=document.createElement("div");
+star.className="star";
+
+star.style.left=Math.random()*100+"vw";
+star.style.top=Math.random()*100+"vh";
+
+star.style.animationDelay=Math.random()*3+"s";
+
+document.body.appendChild(star);
+
+}
+
+</script>
+
+</body>
+</html>
