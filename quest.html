@@ -3,211 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Haya: High-Detail 2D</title>
+    <title>Haya: 4K Immersive</title>
     <style>
-        :root { --primary: #00f2ff; --accent: #ff0055; --bg: #05020a; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; height: 100vh; }
+        :root { --glow: #00f2ff; --crimson: #ff0044; --glass: rgba(255, 255, 255, 0.15); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; cursor: crosshair; }
+        body { margin: 0; background: #020105; overflow: hidden; font-family: 'Inter', sans-serif; }
         
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; perspective: 1000px; }
 
-        /* --- DETAILED BACKGROUND --- */
-        .sky-gradient { position: absolute; width: 100%; height: 100%; background: linear-gradient(to bottom, #0a0515, #1a0b2e); z-index: 1; }
-        .parallax-stars { position: absolute; width: 200%; height: 100%; background-image: radial-gradient(white 1px, transparent 1px); background-size: 50px 50px; z-index: 2; opacity: 0.3; }
-        .far-city { position: absolute; bottom: 0; width: 200%; height: 300px; background: repeating-linear-gradient(90deg, #0d061a 0px, #0d061a 40px, transparent 40px, transparent 80px); opacity: 0.4; z-index: 3; }
+        /* --- 4K TEXTURE FILTERS --- */
+        .texture-overlay { position: fixed; inset: 0; pointer-events: none; opacity: 0.03; z-index: 9999; background: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>'); }
 
-        #world { position: absolute; width: 10000px; height: 100%; will-change: transform; z-index: 10; }
+        /* --- IMMERSIVE BACKGROUND --- */
+        .nebula { position: absolute; width: 200%; height: 200%; background: radial-gradient(circle at 50% 50%, #1a0b2e 0%, transparent 70%); filter: blur(80px); opacity: 0.4; z-index: 1; }
+        #world { position: absolute; width: 20000px; height: 100%; will-change: transform; z-index: 10; transform-style: preserve-3d; }
 
-        /* --- THE HIGH-DETAIL MODEL --- */
-        .char { position: absolute; width: 80px; height: 120px; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; }
+        /* --- THE 4K HAYA MODEL --- */
+        .haya-container { position: absolute; width: 100px; height: 150px; z-index: 100; transform-origin: bottom center; will-change: transform, left, bottom; }
         
-        #haya-visual { position: relative; width: 50px; height: 110px; transform-origin: bottom center; transition: transform 0.1s; }
+        .haya-visual { position: relative; width: 60px; height: 130px; transform-origin: bottom center; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
 
-        /* Hair with Shading */
-        .hair-main { position: absolute; width: 45px; height: 35px; background: linear-gradient(135deg, #3d2b1f 0%, #1a110a 100%); border-radius: 20px 20px 5px 15px; top: -5px; left: -5px; z-index: 11; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5); }
-        .hair-shine { position: absolute; width: 20px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; top: 5px; left: 10px; z-index: 12; transform: rotate(-5deg); }
+        /* Head & Hair with High Detail */
+        .head { position: absolute; width: 40px; height: 44px; background: linear-gradient(135deg, #ffe0bd 0%, #ffcd94 100%); border-radius: 50% 50% 48% 48%; top: 0; left: 10px; z-index: 10; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.1); }
+        .hair-back { position: absolute; width: 50px; height: 60px; background: #2d1b10; border-radius: 20px; top: 5px; left: -5px; z-index: 1; filter: blur(1px); }
+        .hair-front { position: absolute; width: 55px; height: 45px; background: #3d2b1f; border-radius: 25px 25px 10px 30px; top: -8px; left: -8px; z-index: 11; border-bottom: 3px solid #1a110a; }
         
-        /* Face & Features */
-        .head { position: absolute; width: 34px; height: 36px; background: #ffe0bd; border-radius: 50% 50% 45% 45%; top: 0; left: 8px; z-index: 10; border-bottom: 2px solid #e0ac69; }
-        .eye { position: absolute; width: 6px; height: 9px; background: #111; border-radius: 50%; top: 14px; right: 6px; border-top: 2px solid #000; }
-        .eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 2px; left: 1px; }
+        /* The Nurse Cap (Embroidered Look) */
+        .cap { position: absolute; width: 26px; height: 14px; background: #fff; top: -15px; left: 20px; z-index: 20; transform: rotate(-12deg); border-radius: 3px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 1px solid #ddd; }
+        .cap::before { content: '✚'; color: var(--crimson); font-size: 11px; position: absolute; left: 7px; top: 0px; font-weight: 900; }
 
-        /* Detailed Uniform */
-        .nurse-cap { position: absolute; width: 22px; height: 12px; background: #fff; top: -12px; left: 15px; border-radius: 4px; z-index: 15; transform: rotate(-10deg); border: 1px solid #ddd; box-shadow: 0 4px 4px rgba(0,0,0,0.2); }
-        .nurse-cap::after { content: '✚'; color: var(--accent); font-size: 10px; position: absolute; top: -1px; left: 6px; }
+        /* Torso - Cinematic Coat */
+        .torso { position: absolute; width: 42px; height: 65px; background: linear-gradient(to right, #ffffff, #e6e6e6); clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); top: 38px; left: 9px; z-index: 5; box-shadow: inset 0 0 15px rgba(0,0,0,0.05); }
 
-        .torso { position: absolute; width: 32px; height: 50px; background: #fff; border-radius: 8px 8px 15px 15px; top: 32px; left: 8px; z-index: 5; background: linear-gradient(to bottom, #fff 70%, #f0f0f0 100%); border: 1px solid #eee; }
-        .waist-belt { position: absolute; width: 34px; height: 6px; background: #f0f0f0; top: 25px; left: -1px; border-radius: 3px; }
+        /* Syringe - Glassmorphism Texture */
+        .syringe-weapon { position: absolute; width: 10px; height: 60px; background: var(--glass); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.3); border-radius: 2px; bottom: -40px; left: 2px; box-shadow: 0 0 20px var(--glow); }
+        .liquid { position: absolute; bottom: 0; width: 100%; height: 70%; background: var(--glow); box-shadow: 0 0 15px var(--glow); }
 
-        /* Limbs with Joint Shading */
-        .arm { position: absolute; width: 10px; height: 40px; background: #fff; border-radius: 5px; top: 35px; transform-origin: top center; border-bottom: 8px solid #ffe0bd; }
-        .arm-back { left: 4px; z-index: 2; filter: brightness(0.75); }
-        .arm-front { left: 22px; z-index: 8; box-shadow: -2px 0 5px rgba(0,0,0,0.1); }
+        /* Limbs with Sub-pixel Smoothing */
+        .arm { position: absolute; width: 12px; height: 50px; background: #fff; border-radius: 6px; top: 40px; transform-origin: top center; border-bottom: 10px solid #ffe0bd; }
+        .arm-back { left: 5px; z-index: 2; filter: brightness(0.6); }
+        .arm-front { left: 25px; z-index: 8; }
         
-        /* THE ENERGY SYRINGE */
-        .weapon { position: absolute; width: 8px; height: 50px; background: rgba(0, 242, 255, 0.2); bottom: -30px; left: 1px; border: 1px solid var(--primary); border-radius: 2px; box-shadow: 0 0 15px var(--primary); overflow: hidden; }
-        .weapon::before { content: ''; position: absolute; bottom: 0; width: 100%; height: 60%; background: var(--primary); }
+        .leg { position: absolute; width: 15px; height: 45px; background: #fff; border-radius: 0 0 8px 8px; top: 90px; transform-origin: top center; border-bottom: 12px solid #111; }
+        .leg-back { left: 15px; z-index: 2; filter: brightness(0.5); }
+        .leg-front { left: 30px; z-index: 8; }
 
-        .leg { position: absolute; width: 12px; height: 35px; background: #fff; border-radius: 0 0 5px 5px; top: 75px; transform-origin: top center; border-bottom: 10px solid #111; }
-        .leg-back { left: 12px; z-index: 2; filter: brightness(0.7); }
-        .leg-front { left: 24px; z-index: 8; }
+        /* --- ANIMATION STATES --- */
+        .walking .leg-front { animation: immersiveRun 0.28s infinite alternate cubic-bezier(0.45, 0, 0.55, 1); }
+        .walking .leg-back { animation: immersiveRun 0.28s infinite alternate-reverse cubic-bezier(0.45, 0, 0.55, 1); }
+        @keyframes immersiveRun { from { transform: rotate(-32deg) translateY(0); } to { transform: rotate(32deg) translateY(-2px); } }
 
-        /* --- HIGH-END ANIMATION --- */
-        .walking .leg-front { animation: gait 0.3s infinite alternate ease-in-out; }
-        .walking .leg-back { animation: gait 0.3s infinite alternate-reverse ease-in-out; }
-        .walking .arm-front { animation: gait 0.3s infinite alternate-reverse ease-in-out; }
-        .walking .arm-back { animation: gait 0.3s infinite alternate ease-in-out; }
-        @keyframes gait { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
+        .double-jump-flare { position: absolute; width: 100px; height: 100px; background: radial-gradient(circle, var(--glow) 0%, transparent 70%); transform: translate(-50%, -50%); opacity: 0; pointer-events: none; z-index: 50; }
+        .flare-anim { animation: flareOut 0.5s ease-out; }
+        @keyframes flareOut { 0% { opacity: 1; transform: scale(0.5); } 100% { opacity: 0; transform: scale(2); } }
 
-        /* Dash & Jump Effects */
-        .ghost { position: absolute; opacity: 0.4; pointer-events: none; filter: blur(2px) brightness(1.5) cyan; animation: fadeOut 0.4s forwards; }
-        @keyframes fadeOut { to { opacity: 0; transform: scale(0.8) translateX(-20px); } }
+        /* Platforms - 4K Textures */
+        .platform { position: absolute; background: linear-gradient(180deg, #150a24 0%, #05020a 100%); border-top: 3px solid var(--glow); box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1); border-radius: 4px; }
 
-        /* Platforms */
-        .plat { position: absolute; background: linear-gradient(180deg, #1e1133 0%, #0a0515 100%); border: 2px solid #3d2266; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1); border-radius: 8px; }
-        
-        /* UI */
-        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; color: #fff; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-shadow: 0 0 10px var(--primary); }
-        .bar-wrap { width: 150px; height: 6px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-        #dash-bar { width: 100%; height: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); transition: width 0.1s; }
+        /* UI - Hyper-Minimalist */
+        #ui { position: fixed; top: 30px; left: 30px; z-index: 1000; color: #fff; letter-spacing: 5px; font-weight: 200; }
+        .dash-container { width: 180px; height: 4px; background: rgba(255,255,255,0.05); margin-top: 15px; border-radius: 2px; }
+        #dash-progress { width: 100%; height: 100%; background: var(--glow); box-shadow: 0 0 15px var(--glow); transition: width 0.2s; }
 
         /* Controls */
-        #controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 2000; }
-        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; backdrop-filter: blur(10px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .btn-main { background: var(--primary); color: #000; border: none; box-shadow: 0 0 20px var(--primary); width: 90px; height: 90px; }
-        .btn-jmp { background: var(--accent); border: none; box-shadow: 0 0 20px var(--accent); }
+        #ctrl { position: fixed; bottom: 50px; width: 100%; display: flex; justify-content: space-between; padding: 0 50px; z-index: 2000; }
+        .btn { width: 85px; height: 85px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; backdrop-filter: blur(15px); transition: 0.2s; }
+        .btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .btn-dash { border-color: var(--glow); color: var(--glow); }
+        .btn-jump { border-color: var(--crimson); color: var(--crimson); font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="sky-gradient"></div>
-    <div class="parallax-stars" id="stars"></div>
-    <div class="far-city" id="city"></div>
-
-    <div id="hud">
-        HAYA // PROTOCOL
-        <div class="bar-wrap"><div id="dash-bar"></div></div>
+<div id="stage">
+    <div class="texture-overlay"></div>
+    <div class="nebula"></div>
+    
+    <div id="ui">
+        NURSE_HAYA // MK-IV
+        <div class="dash-container"><div id="dash-progress"></div></div>
     </div>
 
     <div id="world">
-        <div id="player" class="char">
-            <div id="haya-visual">
-                <div class="nurse-cap"></div>
+        <div id="player" class="haya-container">
+            <div id="visual" class="haya-visual">
+                <div class="hair-back"></div>
+                <div class="cap"></div>
                 <div class="arm arm-back"></div>
                 <div class="leg leg-back"></div>
-                <div class="torso">
-                    <div class="waist-belt"></div>
-                </div>
+                <div class="torso"></div>
                 <div class="head">
-                    <div class="hair-main"><div class="hair-shine"></div></div>
-                    <div class="eye"></div>
+                    <div class="hair-front"></div>
                 </div>
                 <div class="leg leg-front"></div>
                 <div class="arm arm-front">
-                    <div class="weapon"></div>
+                    <div class="syringe-weapon"><div class="liquid"></div></div>
                 </div>
             </div>
+            <div id="flare" class="double-jump-flare"></div>
         </div>
-        <div id="platforms"></div>
+        <div id="plats"></div>
     </div>
 
-    <div id="controls">
-        <div style="display:flex; gap:20px;"><div class="btn" id="lBtn">◀</div><div class="btn" id="rBtn">▶</div></div>
-        <div style="display:flex; gap:20px; align-items: flex-end;">
-            <div class="btn btn-main" id="dBtn">⚡</div>
-            <div class="btn btn-jmp" id="jBtn">▲</div>
+    <div id="ctrl">
+        <div style="display:flex; gap:25px;"><div class="btn" id="lB">◀</div><div class="btn" id="rB">▶</div></div>
+        <div style="display:flex; gap:25px; align-items: flex-end;">
+            <div class="btn btn-dash" id="dB">⚡</div>
+            <div class="btn btn-jump" id="jB">JUMP</div>
         </div>
     </div>
 </div>
 
 <script>
     const world = document.getElementById('world'), player = document.getElementById('player');
-    const visual = document.getElementById('haya-visual'), dashBar = document.getElementById('dash-bar');
-    const stars = document.getElementById('stars'), city = document.getElementById('city');
+    const visual = document.getElementById('visual'), dashFill = document.getElementById('dash-progress');
+    const flare = document.getElementById('flare');
 
-    let pX = 200, pY = 400, vX = 0, vY = 0;
+    let pX = 300, pY = 400, vX = 0, vY = 0;
     let jumpCount = 0, isDashing = false, dashReady = true;
-    const config = { gravity: 0.9, jump: -21, speed: 7.5, friction: 0.8, dashPower: 28 };
+    
+    const config = { gravity: 0.85, jump: -20, speed: 8, friction: 0.82, dashDist: 26 };
 
-    const plats = [
-        {x: 0, y: 150, w: 900}, {x: 1050, y: 300, w: 500}, {x: 1700, y: 450, w: 400}, 
-        {x: 2300, y: 300, w: 700}, {x: 3200, y: 500, w: 1200}
+    const level = [
+        {x: 0, y: 150, w: 1200}, {x: 1400, y: 350, w: 600}, {x: 2200, y: 500, w: 400}, 
+        {x: 2800, y: 300, w: 800}, {x: 3800, y: 550, w: 1500}
     ];
 
-    plats.forEach(p => {
-        const d = document.createElement('div'); d.className = 'plat';
-        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'40px'});
-        document.getElementById('platforms').appendChild(d);
+    level.forEach(p => {
+        const d = document.createElement('div'); d.className = 'platform';
+        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'50px'});
+        document.getElementById('plats').appendChild(d);
     });
 
-    const keys = { l: false, r: false };
+    const input = { l: false, r: false };
     const setup = (id, s, e) => {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (ev) => { ev.preventDefault(); s(); });
         if(e) el.addEventListener('touchend', (ev) => { ev.preventDefault(); e(); });
     };
 
-    setup('lBtn', () => keys.l = true, () => keys.l = false);
-    setup('rBtn', () => keys.r = true, () => keys.r = false);
-    setup('jBtn', () => { 
+    setup('lB', () => input.l = true, () => input.l = false);
+    setup('rB', () => input.r = true, () => input.r = false);
+    
+    setup('jB', () => { 
         if(jumpCount < 2) { 
-            vY = config.jump; jumpCount++; 
-            visual.style.transform = "scale(0.8, 1.3)";
-            setTimeout(() => visual.style.transform = "scale(1, 1)", 200);
+            vY = config.jump; 
+            if(jumpCount === 1) { // Double Jump FX
+                flare.classList.remove('flare-anim'); void flare.offsetWidth;
+                flare.classList.add('flare-anim');
+            }
+            jumpCount++; 
+            visual.style.transform = "scale(0.85, 1.25)";
+            setTimeout(() => visual.style.transform = "scale(1, 1)", 150);
         } 
     });
 
-    setup('dBtn', () => {
+    setup('dB', () => {
         if(dashReady) {
             isDashing = true; dashReady = false;
             let dir = player.style.transform.includes('-1') ? -1 : 1;
-            vX = dir * config.dashPower; vY = 0;
-            visual.style.transform = "scale(1.4, 0.7)";
-            dashBar.style.width = "0%";
+            vX = dir * config.dashDist; vY = 0;
+            visual.style.filter = "blur(4px) brightness(1.5)";
+            visual.style.transform = "scale(1.5, 0.6)";
+            dashFill.style.width = "0%";
             
-            let t = setInterval(() => {
-                const g = visual.cloneNode(true); g.className = 'ghost';
-                g.style.left = pX + 'px'; g.style.bottom = pY + 'px';
-                world.appendChild(g); setTimeout(() => g.remove(), 400);
-            }, 40);
-
-            setTimeout(() => { isDashing = false; visual.style.transform = "scale(1, 1)"; clearInterval(t); }, 300);
-            setTimeout(() => { dashReady = true; dashBar.style.width = "100%"; }, 1200);
+            setTimeout(() => { 
+                isDashing = false; 
+                visual.style.filter = "none";
+                visual.style.transform = "scale(1, 1)";
+            }, 200);
+            setTimeout(() => { dashReady = true; dashFill.style.width = "100%"; }, 1000);
         }
     });
 
     function update() {
         if(!isDashing) {
-            vX = keys.l ? -config.speed : (keys.r ? config.speed : vX * config.friction);
+            vX = input.l ? -config.speed : (input.r ? config.speed : vX * config.friction);
             vY += config.gravity;
         }
         pX += vX; pY -= vY;
 
-        let onGround = false;
-        plats.forEach(p => {
-            if (pX + 40 > p.x && pX < p.x + p.w) {
-                if (vY > 0 && pY <= p.y + 40 && pY > p.y) {
-                    pY = p.y + 40; vY = 0; jumpCount = 0; onGround = true;
+        let grounded = false;
+        level.forEach(p => {
+            if (pX + 50 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY <= p.y + 50 && pY > p.y) {
+                    if(vY > 5) { // Landing squash
+                        visual.style.transform = "scale(1.3, 0.7)";
+                        setTimeout(() => visual.style.transform = "scale(1, 1)", 150);
+                    }
+                    pY = p.y + 50; vY = 0; jumpCount = 0; grounded = true;
                 }
             }
         });
 
-        if(Math.abs(vX) > 1 && onGround) player.classList.add('walking');
+        if(Math.abs(vX) > 1 && grounded) player.classList.add('walking');
         else player.classList.remove('walking');
 
         if(vX > 0.5) player.style.transform = "scaleX(1)";
         else if(vX < -0.5) player.style.transform = "scaleX(-1)";
 
-        // Smooth Camera + Parallax
-        let camX = -(pX - window.innerWidth/2);
-        world.style.transform = `translateX(${camX}px)`;
-        stars.style.transform = `translateX(${camX * 0.2}px)`;
-        city.style.transform = `translateX(${camX * 0.5}px)`;
-
+        // Camera Smoothing
+        world.style.transform = `translateX(${-(pX - window.innerWidth/2)}px)`;
         player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
 
-        if(pY < -200) { pX = 200; pY = 400; vY = 0; }
+        if(pY < -300) { pX = 300; pY = 400; vY = 0; }
         requestAnimationFrame(update);
     }
     update();
