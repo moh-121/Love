@@ -2,218 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Haya: Sector 7 Protocol</title>
+    <title>Haya: Stable PC Edition</title>
     <style>
-        :root { --glow: #00f2ff; --warn: #ff0055; --panel: rgba(10, 5, 25, 0.85); }
-        * { box-sizing: border-box; cursor: crosshair; }
-        body { margin: 0; background: #020105; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
+        :root { --cyan: #00f2ff; --red: #ff0055; --dark: #05020a; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
 
-        /* --- THE VIEWPORT --- */
-        #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #parallax-bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #020105 100%); }
-        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; }
+        /* Stage and Camera */
+        #viewport { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle, #1a0b2e, #000); overflow: hidden; }
+        #world { position: absolute; width: 100%; height: 100%; will-change: transform; }
+
+        /* High-Detail Character */
+        #haya { 
+            position: absolute; width: 50px; height: 80px; 
+            z-index: 100; will-change: transform;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .haya-head { width: 30px; height: 30px; background: #ffe0bd; border-radius: 50%; border-top: 5px solid #2d1b10; position: relative; }
+        .haya-head::after { content: ''; position: absolute; width: 4px; height: 6px; background: #000; right: 8px; top: 12px; border-radius: 50%; }
+        .haya-coat { width: 35px; height: 45px; background: #fff; border-radius: 5px 5px 15px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; }
+        .haya-coat::before { content: '✚'; color: var(--red); position: absolute; top: 5px; right: 5px; font-size: 10px; font-weight: bold; }
+        .syringe { width: 6px; height: 40px; background: var(--cyan); position: absolute; right: -10px; top: 10px; box-shadow: 0 0 15px var(--cyan); border-radius: 2px; }
+
+        /* Platforms */
+        .platform { position: absolute; background: linear-gradient(to bottom, #2d1b4d, #110524); border-top: 3px solid var(--cyan); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* UI */
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; }
+        .bar { width: 200px; height: 8px; background: rgba(255,255,255,0.1); border: 1px solid var(--cyan); margin-top: 10px; }
+        #hp-fill { width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
         
-        #world { position: absolute; will-change: transform; }
-
-        /* --- HIGH-DETAIL HAYA MODEL --- */
-        .player { position: absolute; width: 60px; height: 100px; transform-origin: bottom center; z-index: 100; transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .visual-haya { position: relative; width: 100%; height: 100%; }
-        
-        /* Shaded Coat */
-        .body-coat { 
-            position: absolute; bottom: 10px; left: 10px; width: 40px; height: 60px; 
-            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
-            border-radius: 8px 8px 20px 20px; border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-        }
-        /* Glowing Syringe-Blade */
-        .arm-front { 
-            position: absolute; top: 35px; right: -5px; width: 12px; height: 40px; 
-            background: #fff; border-radius: 6px; transform-origin: top center; z-index: 10;
-        }
-        .blade { 
-            position: absolute; bottom: -35px; left: 2px; width: 8px; height: 50px; 
-            background: var(--glow); border-radius: 2px;
-            box-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow);
-            filter: brightness(1.2);
-        }
-        .head { position: absolute; top: 0; left: 15px; width: 34px; height: 34px; background: #ffe0bd; border-radius: 50%; border-bottom: 2px solid #d4a373; }
-        .hair { position: absolute; top: -5px; left: -5px; width: 44px; height: 30px; background: #2d1b10; border-radius: 20px 20px 5px 15px; }
-
-        /* --- VISUAL EFFECTS --- */
-        .particle { position: absolute; pointer-events: none; border-radius: 50%; background: var(--glow); animation: fadeOut 0.6s forwards; }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px) scale(0); } }
-
-        .slash-fx { 
-            position: absolute; width: 150px; height: 150px; border: 4px solid var(--glow); 
-            border-radius: 50%; border-right-color: transparent; border-top-color: transparent;
-            opacity: 0; pointer-events: none; filter: blur(1px) drop-shadow(0 0 10px var(--glow));
-        }
-        .attacking .slash-fx { animation: slashBlur 0.3s ease-out; }
-        @keyframes slashBlur { 0% { opacity: 1; transform: scale(0.5) rotate(0deg); } 100% { opacity: 0; transform: scale(1.5) rotate(180deg); } }
-
-        /* --- UI & HUD --- */
-        #hud { position: fixed; top: 30px; left: 30px; z-index: 1000; }
-        .hp-outer { width: 300px; height: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; }
-        #hp-inner { width: 100%; height: 100%; background: var(--glow); box-shadow: 0 0 15px var(--glow); transition: width 0.3s ease; }
-        .key-hint { margin-top: 10px; font-size: 12px; letter-spacing: 2px; opacity: 0.6; }
-
-        /* --- ENVIRONMENT --- */
-        .plat { position: absolute; background: linear-gradient(180deg, #1e1133 0%, #0a0515 100%); border: 2px solid #3d2266; box-shadow: inset 0 2px 10px rgba(0,242,255,0.1); border-radius: 8px; }
-        .enemy { position: absolute; width: 50px; height: 50px; background: var(--warn); border-radius: 50%; filter: blur(4px); box-shadow: 0 0 30px var(--warn); }
+        #debug { position: fixed; top: 20px; right: 20px; font-size: 12px; opacity: 0.5; text-align: right; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="stage">
-    <div id="parallax-bg"></div>
+<div id="viewport">
     <div id="hud">
-        <div style="font-weight: bold; letter-spacing: 4px; margin-bottom: 5px;">HAYA_SYSTEM // V.04</div>
-        <div class="hp-outer"><div id="hp-inner"></div></div>
-        <div class="key-hint">A/D: MOVE | SPACE: JUMP | L-CLICK: ATTACK | SHIFT: DASH</div>
+        <div style="font-weight: bold; letter-spacing: 2px;">HAYA // BIOSYSTEM</div>
+        <div class="bar"><div id="hp-fill"></div></div>
+    </div>
+
+    <div id="debug">
+        X: <span id="dx">0</span> | Y: <span id="dy">0</span><br>
+        STATUS: <span id="ds">INIT</span>
     </div>
 
     <div id="world">
-        <div id="player" class="player">
-            <div class="visual-haya">
-                <div class="slash-fx"></div>
-                <div class="head"><div class="hair"></div></div>
-                <div class="body-coat"></div>
-                <div class="arm-front" id="weapon-arm"><div class="blade"></div></div>
+        <div id="haya">
+            <div class="haya-head"></div>
+            <div class="haya-coat">
+                <div class="syringe" id="weapon"></div>
             </div>
         </div>
-        <div id="platforms"></div>
-        <div id="enemies"></div>
+        <div id="entities"></div>
     </div>
 </div>
 
 <script>
-    const stage = document.getElementById('stage'), world = document.getElementById('world'), player = document.getElementById('player');
-    const arm = document.getElementById('weapon-arm'), hpBar = document.getElementById('hp-inner');
+    const world = document.getElementById('world'), haya = document.getElementById('haya');
+    const dx = document.getElementById('dx'), dy = document.getElementById('dy'), ds = document.getElementById('ds');
 
-    // --- GAME STATE ---
-    let pX = 200, pY = 400, vX = 0, vY = 0;
-    let camX = 0, camY = 0;
-    let isGrounded = false, canDash = true, jumpCount = 0;
-    const input = { left: false, right: false, up: false };
+    // Physics Settings
+    let pX = 200, pY = 300, vX = 0, vY = 0;
+    let camX = 0;
+    const gravity = 0.8, friction = 0.85, speed = 1.2, jumpPower = -16;
+    const keys = {};
 
-    const config = {
-        accel: 1.2,
-        friction: 0.85,
-        maxSpeed: 8,
-        gravity: 0.8,
-        jump: -18,
-        dashPower: 35
-    };
-
-    // --- INITIALIZE WORLD ---
-    const plats = [
-        {x: 0, y: 150, w: 1200}, {x: 1300, y: 350, w: 600}, {x: 2000, y: 500, w: 500}, 
-        {x: 2600, y: 300, w: 800}, {x: 3600, y: 550, w: 1000}
+    // Generate Level
+    const map = [
+        {x: 0, y: 500, w: 1000},   // Starting Floor
+        {x: 1100, y: 350, w: 400}, // Floating Plat 1
+        {x: 1600, y: 200, w: 500}, // Floating Plat 2
+        {x: 2200, y: 400, w: 800}  // Final Floor
     ];
 
-    plats.forEach(p => {
-        const d = document.createElement('div'); d.className = 'plat';
-        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'40px'});
-        document.getElementById('platforms').appendChild(d);
+    map.forEach(p => {
+        const d = document.createElement('div');
+        d.className = 'platform';
+        Object.assign(d.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '40px' });
+        document.getElementById('entities').appendChild(d);
     });
 
-    // Create Stars
-    for(let i=0; i<150; i++){
-        const s = document.createElement('div'); s.className = 'star';
-        const size = Math.random() * 3;
-        Object.assign(s.style, {left:Math.random()*100+'%', top:Math.random()*100+'%', width:size+'px', height:size+'px'});
-        document.getElementById('parallax-bg').appendChild(s);
-    }
-
-    // --- PC CONTROLS ---
-    window.addEventListener('keydown', e => {
-        if(e.code === 'KeyD' || e.code === 'ArrowRight') input.right = true;
-        if(e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = true;
-        if(e.code === 'Space' || e.code === 'KeyW') jump();
-        if(e.code === 'ShiftLeft') dash();
-    });
-    window.addEventListener('keyup', e => {
-        if(e.code === 'KeyD' || e.code === 'ArrowRight') input.right = false;
-        if(e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = false;
-    });
-    window.addEventListener('mousedown', () => attack());
-
-    function jump() {
-        if(jumpCount < 2) {
-            vY = config.jump;
-            jumpCount++;
-            spawnParticles(pX + 30, pY);
-        }
-    }
-
-    function dash() {
-        if(canDash) {
-            vX = (player.style.transform.includes('-1') ? -1 : 1) * config.dashPower;
-            vY = 0; canDash = false;
-            setTimeout(() => canDash = true, 800);
-            shakeCamera(15);
-        }
-    }
+    // Inputs
+    window.onkeydown = (e) => keys[e.code] = true;
+    window.onkeyup = (e) => keys[e.code] = false;
+    window.onmousedown = () => attack();
 
     function attack() {
-        player.classList.add('attacking');
-        arm.style.transform = "rotate(130deg)";
-        setTimeout(() => {
-            player.classList.remove('attacking');
-            arm.style.transform = "rotate(0deg)";
-        }, 200);
+        document.getElementById('weapon').style.transform = "rotate(90deg) scale(1.5)";
+        setTimeout(() => document.getElementById('weapon').style.transform = "rotate(0deg) scale(1)", 150);
     }
 
-    function spawnParticles(x, y) {
-        for(let i=0; i<8; i++) {
-            const p = document.createElement('div'); p.className = 'particle';
-            p.style.left = x + 'px'; p.style.bottom = y + 'px';
-            p.style.width = p.style.height = Math.random()*8+'px';
-            world.appendChild(p); setTimeout(() => p.remove(), 600);
-        }
-    }
-
-    function shakeCamera(amt) {
-        stage.style.transform = `translate(${Math.random()*amt-amt/2}px, ${Math.random()*amt-amt/2}px)`;
-        setTimeout(() => stage.style.transform = `translate(0,0)`, 100);
-    }
-
-    // --- MAIN LOOP ---
     function update() {
-        // Physics logic
-        if(input.left) vX -= config.accel;
-        if(input.right) vX += config.accel;
-        vX *= config.friction;
-        
-        vY += config.gravity;
-        pX += vX; pY -= vY;
+        // Movement logic
+        if (keys['KeyA'] || keys['ArrowLeft']) vX -= speed;
+        if (keys['KeyD'] || keys['ArrowRight']) vX += speed;
+        if ((keys['Space'] || keys['KeyW']) && Math.abs(vY) < 0.1) vY = jumpPower;
 
-        // Collision logic
-        isGrounded = false;
-        plats.forEach(p => {
-            if (pX + 40 > p.x && pX < p.x + p.w && vY > 0 && pY <= p.y + 40 && pY > p.y) {
-                pY = p.y + 40; vY = 0; jumpCount = 0; isGrounded = true;
+        vX *= friction;
+        vY += gravity;
+        pX += vX; pY += vY;
+
+        // Collision Detection
+        let onGround = false;
+        map.forEach(p => {
+            if (pX + 40 > p.x && pX < p.x + p.w) {
+                // Falling onto a platform
+                if (vY > 0 && pY + 80 >= p.y && pY + 80 <= p.y + 40) {
+                    pY = p.y - 80;
+                    vY = 0;
+                    onGround = true;
+                }
             }
         });
 
-        // Facing flip
-        if(vX > 0.5) player.style.transform = "scaleX(1)";
-        else if(vX < -0.5) player.style.transform = "scaleX(-1)";
+        // Facing direction
+        if (vX > 0.2) haya.style.transform = `translate(${pX}px, ${pY}px) scaleX(1)`;
+        else if (vX < -0.2) haya.style.transform = `translate(${pX}px, ${pY}px) scaleX(-1)`;
+        else haya.style.transform = `translate(${pX}px, ${pY}px)`;
 
-        // Smooth Camera Lerping (interpolation)
-        const targetCamX = -(pX - window.innerWidth / 2);
-        camX += (targetCamX - camX) * 0.1; // 0.1 is the smoothness factor
-        
+        // Camera Lerping
+        const targetCam = -(pX - window.innerWidth / 2);
+        camX += (targetCam - camX) * 0.1;
         world.style.transform = `translateX(${camX}px)`;
-        player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
 
-        // Respawn
-        if(pY < -200) { pX = 200; pY = 400; vX = 0; vY = 0; }
+        // Debug Output
+        dx.innerText = Math.round(pX);
+        dy.innerText = Math.round(pY);
+        ds.innerText = onGround ? "GROUNDED" : "AIRBORNE";
+
+        // Fall Safety (Respawn)
+        if (pY > 1000) {
+            pX = 200; pY = 300; vX = 0; vY = 0;
+        }
 
         requestAnimationFrame(update);
     }
 
+    // Launch Engine
     update();
 </script>
 </body>
