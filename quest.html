@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Haya's Journey ❤️</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #0a0a0a; font-family: -apple-system, sans-serif; height: 100vh; touch-action: none; }
+        
+        #game-world { position: relative; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #1a0033 0%, #4a0000 100%); display: none; }
+        #hud { position: absolute; top: 40px; width: 100%; text-align: center; color: white; font-weight: bold; z-index: 100; font-size: 22px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        
+        /* THE CHARACTER */
+        #player { 
+            position: absolute; 
+            width: 40px; 
+            height: 50px; 
+            z-index: 50; 
+            transition: transform 0.1s;
+        }
+        
+        /* Character Parts */
+        .char-body { 
+            width: 100%; height: 70%; 
+            background: #ff4d6d; 
+            border-radius: 12px 12px 4px 4px; 
+            position: absolute; top: 0;
+            box-shadow: inset -5px -5px 0 rgba(0,0,0,0.2);
+            animation: breathe 2s infinite ease-in-out;
+        }
+        .char-face { position: absolute; top: 8px; width: 100%; text-align: center; font-size: 14px; color: white; }
+        .feet { position: absolute; bottom: 0; width: 100%; display: flex; justify-content: space-around; }
+        .foot { width: 12px; height: 12px; background: #333; border-radius: 4px; }
+
+        /* Animations */
+        @keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.05); } }
+        .walking .foot-l { animation: step 0.2s infinite alternate; }
+        .walking .foot-r { animation: step 0.2s infinite alternate-reverse; }
+        @keyframes step { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+        
+        /* World Elements */
+        .platform { position: absolute; background: rgba(255, 77, 109, 0.8); border-radius: 8px; border-bottom: 4px solid #b3002d; }
+        .collectible { position: absolute; font-size: 30px; animation: float 2s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Controls */
+        #controls { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 200; }
+        .ctrl-btn { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 35px; border: 2px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); }
+        .jump-btn { background: #ff4d6d; width: 100px; border: none; color: white; font-weight: bold; }
+
+        /* Result View */
+        #letter-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fffdf5; z-index: 2000; padding: 50px 30px; text-align: left; }
+        #message { font-family: 'Caveat', cursive; font-size: 26px; line-height: 1.4; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div id="game-world">
+        <div id="hud">💖 <span id="score">0</span> / 150</div>
+        
+        <div id="player">
+            <div class="char-body">
+                <div class="char-face">^ _ ^</div>
+            </div>
+            <div class="feet">
+                <div class="foot foot-l"></div>
+                <div class="foot foot-r"></div>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div style="display:flex; gap:15px;">
+                <div class="ctrl-btn" ontouchstart="move(-1)" ontouchend="stopMove()">⬅️</div>
+                <div class="ctrl-btn" ontouchstart="move(1)" ontouchend="stopMove()">➡️</div>
+            </div>
+            <div class="ctrl-btn jump-btn" ontouchstart="jump()">JUMP</div>
+        </div>
+    </div>
+
+    <div id="letter-view">
+        <div id="message">
+            Haya, you made it to the end! ❤️<br><br>
+            With every passing day, my love for you grows even stronger. Every time I hear your voice, I fall a little deeper. You’ve become a part of me—a part I never want to let go. <br><br>
+            I’m so proud of the amazing, brave girl you’ve become. I truly love you with all my heart.<br><br>
+            —M
+            <br><br>
+            <button style="padding:15px 40px; background:#ff4d6d; color:white; border:none; border-radius:50px; font-size:20px;" onclick="location.reload()">Play Again?</button>
+        </div>
+    </div>
+
+    <script>
+        // Auto-Start for simplicity
+        document.getElementById('game-world').style.display = 'block';
+
+        const player = document.getElementById('player');
+        const scoreEl = document.getElementById('score');
+        
+        let score = 0;
+        let pX = 50, pY = 300;
+        let velX = 0, velY = 0;
+        let isJumping = false;
+        const gravity = 0.6;
+        const speed = 6;
+        const jumpPower = -14;
+        
+        const platforms = [
+            {l: 0, b: 0, w: 2000, h: 60}, // Ground
+            {l: 50, b: 150, w: 120, h: 15},
+            {l: 220, b: 250, w: 120, h: 15},
+            {l: 400, b: 350, w: 150, h: 15},
+            {l: 150, b: 450, w: 120, h: 15}
+        ];
+
+        // Create Platforms
+        platforms.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'platform';
+            div.style.left = p.l + 'px';
+            div.style.bottom = p.b + 'px';
+            div.style.width = p.w + 'px';
+            div.style.height = p.h + 'px';
+            document.getElementById('game-world').appendChild(div);
+        });
+
+        function spawnItems() {
+            const types = [{s:'❤️',v:1}, {s:'⭐',v:5}, {s:'🌹',v:15}];
+            for(let i=0; i<15; i++){
+                const t = types[Math.floor(Math.random()*types.length)];
+                const d = document.createElement('div');
+                d.className = 'collectible';
+                d.innerHTML = t.s;
+                d.dataset.val = t.v;
+                d.style.left = Math.random()*(window.innerWidth-40)+'px';
+                d.style.bottom = (Math.random()*400+100)+'px';
+                document.getElementById('game-world').appendChild(d);
+            }
+        }
+        spawnItems();
+
+        function move(dir) { 
+            velX = dir * speed; 
+            player.classList.add('walking');
+            player.style.transform = dir < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+        }
+        function stopMove() { 
+            velX = 0; 
+            player.classList.remove('walking');
+        }
+        function jump() { 
+            if(!isJumping) {
+                velY = jumpPower;
+                isJumping = true;
+            }
+        }
+
+        function gameLoop() {
+            pX += velX;
+            velY += gravity;
+            pY += velY;
+
+            // Collision with Ground/Platforms
+            let groundLevel = window.innerHeight - 60;
+            if(pY > groundLevel - 50) {
+                pY = groundLevel - 50;
+                velY = 0;
+                isJumping = false;
+            }
+
+            platforms.forEach(p => {
+                const pTop = window.innerHeight - p.b - p.h;
+                if(pX + 30 > p.l && pX < p.l + p.w && pY + 50 > pTop && pY + 50 < pTop + 20 && velY > 0) {
+                    pY = pTop - 50;
+                    velY = 0;
+                    isJumping = false;
+                }
+            });
+
+            // Collision with items
+            document.querySelectorAll('.collectible').forEach(item => {
+                const pR = player.getBoundingClientRect();
+                const iR = item.getBoundingClientRect();
+                if(!(pR.right < iR.left || pR.left > iR.right || pR.bottom < iR.top || pR.top > iR.bottom)) {
+                    score += parseInt(item.dataset.val);
+                    scoreEl.innerText = score;
+                    item.remove();
+                    if(score >= 150) {
+                        document.getElementById('game-world').style.display = 'none';
+                        document.getElementById('letter-view').style.display = 'block';
+                    }
+                }
+            });
+
+            if(document.querySelectorAll('.collectible').length < 6) spawnItems();
+
+            player.style.left = pX + 'px';
+            player.style.top = pY + 'px';
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
