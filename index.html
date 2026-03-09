@@ -15,26 +15,26 @@
             align-items: center;
             background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, system-ui, sans-serif;
             text-align: center;
             overflow: hidden;
             touch-action: manipulation;
         }
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
-        .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 10px; }
-        #counter { font-size: 1.3rem; color: #ffb3c1; margin: 20px 0; font-variant-numeric: tabular-nums; font-weight: 300; }
+        .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
+        #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 40px; font-size: 20px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); z-index: 100; }
         
         #message-container { width: 90%; max-width: 500px; display: none; padding: 20px; }
         #message { font-size: 19px; line-height: 1.6; color: #ffd6e0; margin-bottom: 30px; }
         
-        .yes-btn { background: #4caf50; padding: 15px 45px; border-radius: 50px; color: white; border: none; font-size: 22px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3); z-index: 10; }
+        .yes-btn { background: #4caf50; padding: 15px 45px; border-radius: 50px; color: white; border: none; font-size: 22px; font-weight: bold; cursor: pointer; }
         .no-btn { background: #f44336; padding: 10px 25px; border-radius: 50px; color: white; border: none; font-size: 16px; position: absolute; transition: 0.15s ease; z-index: 999; cursor: pointer; }
         
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; }
-        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-110vh) scale(1.5); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-110vh); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -42,7 +42,7 @@
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
         <p class="sub-text">Since the day I first said I love you</p>
-        <div id="counter">Calculating...</div>
+        <div id="counter">Loading...</div>
         <button class="btn-main" onclick="startApp()">Click here, Haya</button>
     </div>
 
@@ -59,46 +59,50 @@
     </div>
 
     <script>
-        // --- TIMER LOGIC ---
-        const startDate = new Date("December 15, 2025 00:00:00").getTime();
+        // --- TIMER LOGIC (ISO Format for better Safari support) ---
+        const startDate = new Date("2025-12-15T00:00:00").getTime();
+        
         function updateCounter() {
             const now = new Date().getTime();
             const diff = now - startDate;
+            
+            if (isNaN(diff)) {
+                document.getElementById("counter").innerHTML = "Forever & Always";
+                return;
+            }
+
             const d = Math.floor(diff / 86400000);
             const h = Math.floor((diff % 86400000) / 3600000);
             const m = Math.floor((diff % 3600000) / 60000);
             const s = Math.floor((diff % 60000) / 1000);
-            document.getElementById("counter").innerHTML = `${d}d : ${h}h : ${m}m : ${s}s`;
+            document.getElementById("counter").innerHTML = d + "d : " + h + "h : " + m + "m : " + s + "s";
         }
         setInterval(updateCounter, 1000);
         updateCounter();
 
+        // --- NAVIGATION ---
         function startApp() {
             document.getElementById("start-screen").style.display = "none";
             document.getElementById("message-container").style.display = "block";
-            createHearts(25);
+            createHearts(15);
         }
 
-        // --- SMART RUNAWAY LOGIC ---
+        // --- SMART RUNAWAY NO ---
         const noBtn = document.getElementById("noBtn");
         const yesBtn = document.getElementById("yesBtn");
 
         function moveNo() {
             const yesRect = yesBtn.getBoundingClientRect();
             let newX, newY;
-            const padding = 80;
+            const pad = 100;
 
-            // Try to find a random spot that isn't near the Yes button
-            for (let i = 0; i < 20; i++) {
-                newX = Math.random() * (window.innerWidth - padding * 2) + padding/2;
-                newY = Math.random() * (window.innerHeight - padding * 2) + padding/2;
+            for (let i = 0; i < 15; i++) {
+                newX = Math.random() * (window.innerWidth - pad) + pad/2;
+                newY = Math.random() * (window.innerHeight - pad) + pad/2;
 
-                // Check distance from Yes button
                 const dx = newX - (yesRect.left + yesRect.width/2);
                 const dy = newY - (yesRect.top + yesRect.height/2);
-                const distance = Math.sqrt(dx*dx + dy*dy);
-
-                if (distance > 150) break; // Safe distance found
+                if (Math.sqrt(dx*dx + dy*dy) > 150) break; 
             }
 
             noBtn.style.position = 'fixed';
@@ -106,4 +110,38 @@
             noBtn.style.top = newY + "px";
         }
 
-        noBtn.addEventListener("touchstart 
+        noBtn.addEventListener("touchstart", function(e) { e.preventDefault(); moveNo(); });
+        noBtn.addEventListener("mouseover", moveNo);
+
+        function sayYes() {
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>Yay! I knew it! <br> I love you forever Haya! ❤️</h2>";
+            createHearts(80);
+        }
+
+        function createHearts(n) {
+            for (let i = 0; i < n; i++) {
+                setTimeout(function() {
+                    const h = document.createElement("div");
+                    h.className = "heart"; h.innerHTML = "❤️";
+                    h.style.left = Math.random() * 100 + "vw"; h.style.top = "100vh";
+                    h.style.fontSize = (Math.random() * 20 + 15) + "px";
+                    h.style.setProperty('--speed', (Math.random() * 2 + 3) + "s");
+                    document.body.appendChild(h);
+                    setTimeout(function() { h.remove(); }, 5000);
+                }, i * 80);
+            }
+        }
+
+        for (let i = 0; i < 80; i++) {
+            const s = document.createElement("div");
+            s.className = "star";
+            const size = Math.random() * 2 + "px";
+            s.style.width = s.style.height = size;
+            s.style.left = Math.random() * 100 + "vw"; s.style.top = Math.random() * 100 + "vh";
+            s.style.setProperty('--duration', (Math.random() * 3 + 2) + "s");
+            s.style.setProperty('--opacity', Math.random());
+            document.body.appendChild(s);
+        }
+    </script>
+</body>
+</html>
