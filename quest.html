@@ -3,123 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Haya: Medical Ace</title>
+    <title>Pixel Nurse Haya ❤️</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #080212; font-family: 'Poppins', sans-serif; height: 100vh; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; height: 100vh; color: #fff; }
         
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: radial-gradient(circle, #1a0b2e 0%, #080212 100%); }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+        
+        /* BACKGROUND - Faraway Pixel Stars */
+        #bg-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5; }
+
         #world { position: absolute; width: 5000px; height: 100%; will-change: transform; z-index: 10; }
 
-        /* --- REDESIGNED NURSE DESIGN --- */
-        .char { position: absolute; width: 50px; height: 80px; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; }
+        /* HUD - Pixel Style */
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .heart-row { display: flex; gap: 8px; margin-bottom: 5px; color: #ff3366; text-shadow: 2px 2px 0 #000; }
+        .dash-outer { width: 100px; height: 10px; background: #333; border: 2px solid #fff; }
+        #dash-bar { width: 100%; height: 100%; background: #00ffff; transition: width 0.1s; }
+
+        /* --- PIXEL HAYA SPRITE SYSTEM --- */
+        .char { position: absolute; width: 40px; height: 60px; will-change: transform, left, bottom; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; image-rendering: pixelated; }
         
-        #haya-visual { 
-            position: relative; width: 32px; height: 75px; transform-origin: bottom center; 
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        
-        /* Head & Hair (Side Profile) */
-        .head { position: absolute; width: 28px; height: 28px; background: #ffe0bd; border-radius: 50% 50% 40% 40%; top: 0; left: 6px; z-index: 10; }
-        .hair { position: absolute; width: 34px; height: 24px; background: #2d1b10; border-radius: 18px 18px 5px 12px; top: -4px; left: -3px; }
-        .hair-back { position: absolute; width: 12px; height: 20px; background: #2d1b10; border-radius: 5px; top: 10px; left: -2px; }
-        .cap { position: absolute; width: 16px; height: 8px; background: #fff; top: -10px; left: 12px; border-radius: 3px; z-index: 15; transform: rotate(-15deg); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
-        .cap::after { content: ''; position: absolute; width: 6px; height: 2px; background: #ff4d6d; top: 3px; left: 5px; }
-        .cap::before { content: ''; position: absolute; width: 2px; height: 6px; background: #ff4d6d; top: 1px; left: 7px; }
-        .eye { position: absolute; width: 5px; height: 7px; background: #111; border-radius: 50%; top: 11px; right: 5px; }
+        #haya-visual { position: relative; width: 32px; height: 56px; transform-origin: bottom center; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* Medical Coat (A-line Shape) */
-        .coat { 
-            position: absolute; width: 28px; height: 38px; background: #ffffff; 
-            border-radius: 5px 5px 12px 12px; top: 26px; left: 4px; z-index: 5;
-            border-bottom: 4px solid #f0f0f0;
-        }
-        .nurse-cross-side { width: 8px; height: 8px; position: absolute; top: 10px; right: 4px; background: #ff4d6d; border-radius: 1px; }
+        /* Pixel Body Parts */
+        .head { position: absolute; width: 20px; height: 20px; background: #ffdbac; top: 0; left: 6px; z-index: 10; border: 2px solid #e0ac69; }
+        .hair { position: absolute; width: 24px; height: 14px; background: #3d2b1f; top: -2px; left: -2px; z-index: 11; border-radius: 4px; }
+        .cap { position: absolute; width: 12px; height: 6px; background: #fff; top: -6px; left: 10px; z-index: 12; border: 2px solid #ddd; }
+        .cap::after { content: '+'; color: #ff3366; position: absolute; top: -4px; left: 3px; font-size: 8px; font-weight: bold; }
+        .eye { position: absolute; width: 4px; height: 4px; background: #000; top: 8px; right: 4px; z-index: 13; }
 
-        /* Limbs (Smoother Integration) */
-        .arm { position: absolute; width: 7px; height: 28px; background: #fff; border-radius: 4px; top: 28px; transform-origin: top center; }
-        .arm-back { left: 4px; z-index: 2; filter: brightness(0.7); }
-        .arm-front { left: 14px; z-index: 8; }
-        
-        /* THE SYRINGE (Weapon) */
-        .syringe {
-            position: absolute; width: 6px; height: 35px; background: #ddd;
-            bottom: -20px; left: 0; border-radius: 2px;
-            border-bottom: 8px solid cyan; box-shadow: 0 0 10px rgba(0,255,255,0.5);
-        }
+        .torso { position: absolute; width: 24px; height: 28px; background: #fff; top: 18px; left: 4px; z-index: 5; border: 2px solid #eee; border-radius: 4px; }
+        .nurse-cross { color: #ff3366; position: absolute; font-size: 14px; top: 8px; right: 3px; font-weight: 900; }
 
-        .leg { position: absolute; width: 9px; height: 22px; background: #fff; border-radius: 0 0 3px 3px; top: 60px; transform-origin: top center; border-bottom: 6px solid #1a1a1a; }
-        .leg-back { left: 8px; z-index: 2; filter: brightness(0.7); }
-        .leg-front { left: 16px; z-index: 8; }
+        /* Limb Layering (Pixel) */
+        .arm { position: absolute; width: 6px; height: 22px; background: #fff; top: 20px; border-bottom: 4px solid #ffdbac; border-radius: 2px; }
+        .arm-back { left: 2px; z-index: 2; filter: brightness(0.7); }
+        .arm-front { left: 12px; z-index: 8; }
+        /* The Syringe Sword */
+        .arm-front::after { content: ''; position: absolute; width: 4px; height: 26px; background: cyan; bottom: -18px; left: 1px; border: 1px solid #fff; box-shadow: 0 0 5px cyan; }
 
-        /* --- REFINED ANIMATIONS --- */
-        .walking .leg-front { animation: legStep 0.28s infinite alternate ease-in-out; }
-        .walking .leg-back { animation: legStep 0.28s infinite alternate-reverse ease-in-out; }
-        .walking .arm-front { animation: armSwing 0.28s infinite alternate ease-in-out; }
-        .walking .arm-back { animation: armSwing 0.28s infinite alternate-reverse ease-in-out; }
+        .leg { position: absolute; width: 8px; height: 16px; background: #fff; top: 44px; border-bottom: 6px solid #1a1a1a; }
+        .leg-back { left: 8px; z-index: 2; filter: brightness(0.6); }
+        .leg-front { left: 18px; z-index: 8; }
 
-        @keyframes legStep { from { transform: rotate(-28deg); } to { transform: rotate(28deg); } }
-        @keyframes armSwing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+        /* PIXEL ANIMATIONS */
+        .walking .leg-back { animation: pixelWalk 0.25s infinite alternate linear; }
+        .walking .leg-front { animation: pixelWalk 0.25s infinite alternate-reverse linear; }
+        .walking .arm-back { animation: pixelWalk 0.25s infinite alternate-reverse linear; }
+        .walking .arm-front { animation: pixelWalk 0.25s infinite alternate linear; }
 
-        .jump-up { transform: scale(0.82, 1.25) !important; }
-        .land-down { transform: scale(1.25, 0.75) !important; }
+        @keyframes pixelWalk { from { transform: rotate(-30deg); } to { transform: rotate(30deg); } }
 
-        /* DASH PHANTOM */
-        .ghost { position: absolute; opacity: 0.3; pointer-events: none; filter: hue-rotate(180deg) brightness(2); animation: fade 0.3s forwards; }
-        @keyframes fade { to { opacity: 0; transform: translateY(-10px) scale(0.8); } }
+        .jump-style { transform: translateY(-5px) scale(0.9, 1.2); }
+        .land-style { transform: scale(1.3, 0.7) !important; }
+        .dash-style { transform: scale(1.6, 0.4) !important; }
 
-        /* SLASH EFFECT */
+        /* Pixel Slash */
         #slash-arc {
-            position: absolute; width: 140px; height: 140px;
-            border: 15px solid transparent; border-right-color: rgba(0, 255, 255, 0.8);
-            border-radius: 50%; top: -20px; right: -90px;
-            opacity: 0; pointer-events: none; filter: drop-shadow(0 0 12px cyan);
+            position: absolute; width: 100px; height: 100px;
+            border: 10px solid transparent; border-right-color: cyan;
+            border-radius: 50%; top: -10px; right: -70px;
+            opacity: 0; pointer-events: none; filter: drop-shadow(0 0 5px cyan);
         }
-        .active-slash { animation: slashAnime 0.22s ease-out forwards; }
-        @keyframes slashAnime { 0% { opacity: 1; transform: rotate(-110deg) scale(0.4); } 100% { opacity: 0; transform: rotate(70deg) scale(1.4); } }
+        .active-slash { animation: slash Anime 0.2s linear forwards; }
+        @keyframes slash Anime { 0% { opacity: 1; transform: rotate(-100deg) scale(0.5); } 100% { opacity: 0; transform: rotate(80deg) scale(1.4); } }
 
-        /* PLATFORMS */
-        .platform { position: absolute; background: linear-gradient(to bottom, #ff4d6d, #a30026); border-radius: 6px; box-shadow: 0 6px 0 #60001a; z-index: 20; }
-        
-        /* CONTROLS */
-        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 25px; z-index: 2000; }
-        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; backdrop-filter: blur(5px); }
-        .atk-btn { background: #fff; color: #000; width: 85px; height: 85px; border: none; box-shadow: 0 0 20px cyan; }
-        .jump-btn { width: 95px; height: 95px; background: #ff4d6d; border: none; font-weight: bold; font-size: 20px; box-shadow: 0 6px #a30026; }
+        /* JUMP FX */
+        .pixel-cloud { position: absolute; width: 30px; height: 10px; background: #fff; animation: cloudFade 0.4s linear forwards; }
+        @keyframes cloudFade { 0% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
+
+        /* WORLD - Pixel Style */
+        .platform { position: absolute; background: #ff3366; border: 4px solid #fff; z-index: 20; }
+        .spike { position: absolute; width: 32px; height: 24px; background: #777; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); z-index: 25; }
+
+        /* CONTROLS - Minimalist */
+        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 2000; }
+        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 10px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .atk-btn { background: cyan; color: #000; border: none; font-size: 35px; width: 85px; height: 85px; box-shadow: 0 0 10px cyan; }
+        .jump-btn { background: #ff3366; border: none; }
     </style>
 </head>
 <body>
 
+<canvas id="bg-stars"></canvas>
 <div id="game-container">
+    <div id="hud">
+        <div class="heart-row" id="hearts"> ❤️ ❤️ ❤️ </div>
+        <div class="dash-outer"><div id="dash-bar"></div></div>
+    </div>
+
     <div id="world">
         <div id="player" class="char">
             <div id="haya-visual">
                 <div class="cap"></div>
                 <div class="arm arm-back"></div>
                 <div class="leg leg-back"></div>
-                <div class="coat"><div class="nurse-cross-side"></div></div>
+                <div class="torso"><div class="nurse-cross">✚</div></div>
                 <div class="head">
-                    <div class="hair-back"></div>
                     <div class="hair"></div>
                     <div class="eye"></div>
                 </div>
                 <div class="leg leg-front"></div>
-                <div class="arm arm-front">
-                    <div class="syringe"></div>
-                </div>
+                <div class="arm arm-front"></div>
                 <div id="slash-arc"></div>
             </div>
         </div>
         <div id="platforms-layer"></div>
+        <div id="spikes-layer"></div>
     </div>
 
     <div id="controls">
-        <div style="display:flex; gap:15px;"><div class="btn" id="lBtn">⬅️</div><div class="btn" id="rBtn">➡️</div></div>
-        <div style="display:flex; gap:15px; align-items: flex-end;">
+        <div style="display:flex; gap:12px;"><div class="btn" id="lBtn">⬅️</div><div class="btn" id="rBtn">➡️</div></div>
+        <div style="display:flex; gap:12px; align-items: flex-end;">
             <div class="btn atk-btn" id="aBtn">💉</div>
             <div class="btn" id="dBtn" style="background:cyan; border:none; color:#000;">⚡</div>
-            <div class="btn jump-btn" id="jBtn">JUMP</div>
+            <div class="btn jump-btn" id="jBtn">UP</div>
         </div>
     </div>
 </div>
@@ -127,62 +126,64 @@
 <script>
     const world = document.getElementById('world'), player = document.getElementById('player');
     const visual = document.getElementById('haya-visual'), slash = document.getElementById('slash-arc');
+    const dashBar = document.getElementById('dash-bar');
 
     let pX = 150, pY = 400, vX = 0, vY = 0;
-    let jumpCount = 0, dashReady = true, isDashing = false, isGrounded = false;
-    const config = { gravity: 0.95, jump: -19, speed: 7.2, friction: 0.82, dashPower: 25 };
+    let jumpCount = 0, isDashing = false, dashReady = true;
+    const config = { gravity: 1.0, jump: -22, speed: 7.0, friction: 0.8, dashPower: 25 };
 
-    const platforms = [
-        {x: 0, y: 120, w: 850}, {x: 1000, y: 280, w: 450}, {x: 1550, y: 450, w: 400},
-        {x: 2100, y: 300, w: 600}, {x: 2800, y: 450, w: 500}, {x: 3500, y: 250, w: 1200}
-    ];
+    const platforms = [{x:0, y:120, w:800}, {x:900, y:280, w:400}, {x:1400, y:450, w:300}, {x:1800, y:250, w:600}, {x:2600, y:450, w:1000}];
+    const spikes = [{x:1600, y:250}, {x:2100, y:250}];
 
     platforms.forEach(p => {
         const d = document.createElement('div'); d.className = 'platform';
-        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'35px'});
+        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'32px'});
         document.getElementById('platforms-layer').appendChild(d);
     });
+    spikes.forEach(s => {
+        const d = document.createElement('div'); d.className = 'spike';
+        Object.assign(d.style, {left:s.x+'px', bottom:(s.y+28)+'px'});
+        document.getElementById('spikes-layer').appendChild(d);
+    });
 
+    const keys = { l: false, r: false };
     const setup = (id, s, e) => {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (ev) => { ev.preventDefault(); s(); });
         if(e) el.addEventListener('touchend', (ev) => { ev.preventDefault(); e(); });
     };
 
-    const keys = { l: false, r: false };
     setup('lBtn', () => keys.l = true, () => keys.l = false);
     setup('rBtn', () => keys.r = true, () => keys.r = false);
     
     setup('jBtn', () => { 
         if(jumpCount < 2) { 
-            vY = config.jump; 
-            jumpCount++; 
-            visual.className = ""; void visual.offsetWidth; 
-            visual.classList.add('jump-up'); 
+            vY = config.jump; if(jumpCount===1) spawnCloud(pX, pY);
+            jumpCount++; visual.className = "jump-style";
         } 
     });
 
     setup('aBtn', () => {
         slash.classList.add('active-slash');
-        setTimeout(() => slash.classList.remove('active-slash'), 220);
+        setTimeout(() => slash.classList.remove('active-slash'), 200);
     });
 
     setup('dBtn', () => {
         if(dashReady) {
             isDashing = true; dashReady = false;
-            let dir = player.style.transform.includes('-1') ? -1 : 1;
-            vX = dir * config.dashPower;
-            vY = 0;
-            
-            let t = setInterval(() => {
-                const g = player.cloneNode(true); g.className = 'ghost'; g.id="";
-                world.appendChild(g); setTimeout(() => g.remove(), 300);
-            }, 50);
-
-            setTimeout(() => { isDashing = false; clearInterval(t); }, 250);
-            setTimeout(() => { dashReady = true; }, 800);
+            vX = (player.style.transform.includes('-1') ? -1 : 1) * config.dashPower;
+            vY = 0; visual.className = "dash-style";
+            dashBar.style.width = "0%";
+            setTimeout(() => { isDashing = false; visual.className = ""; }, 250);
+            setTimeout(() => { dashReady = true; dashBar.style.width = "100%"; }, 1000);
         }
     });
+
+    function spawnCloud(x, y) {
+        const c = document.createElement('div'); c.className = 'pixel-cloud';
+        c.style.left = (x + 5) + 'px'; c.style.bottom = y + 'px';
+        world.appendChild(c); setTimeout(() => c.remove(), 400);
+    }
 
     function update() {
         if(!isDashing) {
@@ -193,23 +194,19 @@
 
         let onGround = false;
         platforms.forEach(p => {
-            if (pX + 25 > p.x && pX < p.x + p.w) {
-                if (vY > 0 && pY <= p.y + 35 && pY > p.y) {
-                    if(!isGrounded) { 
-                        visual.classList.add('land-down');
-                        setTimeout(() => visual.classList.remove('land-down'), 200);
-                    }
-                    pY = p.y + 35; vY = 0; jumpCount = 0; onGround = true;
+            if (pX + 30 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY <= p.y + 32 && pY > p.y) {
+                    pY = p.y + 32; vY = 0; jumpCount = 0; onGround = true; visual.className = "";
                 }
             }
         });
-        isGrounded = onGround;
 
-        if(Math.abs(vX) > 1 && isGrounded) player.classList.add('walking');
+        if(Math.abs(vX) > 1 && onGround) player.classList.add('walking');
         else player.classList.remove('walking');
 
-        if(vX > 0.5) player.style.transform = "scaleX(1)";
-        else if(vX < -0.5) player.style.transform = "scaleX(-1)";
+        // Sprite Flipping
+        if(vX > 0.1) player.style.transform = "scaleX(1)";
+        else if(vX < -0.1) player.style.transform = "scaleX(-1)";
 
         world.style.transform = `translateX(${-(pX - window.innerWidth/2)}px)`;
         player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
@@ -217,6 +214,15 @@
         if(pY < -100) { pX = 150; pY = 400; vY = 0; }
         requestAnimationFrame(update);
     }
+
+    // Far Background Stars (Canvas)
+    const can = document.getElementById('bg-stars'); const ctx = can.getContext('2d');
+    can.width = window.innerWidth; can.height = window.innerHeight;
+    for(let i=0; i<100; i++) {
+        ctx.fillStyle = i%3===0 ? '#fff' : (i%3===1 ? '#0ff' : '#f0f');
+        ctx.fillRect(Math.random()*can.width, Math.random()*can.height, 2, 2);
+    }
+
     update();
 </script>
 </body>
