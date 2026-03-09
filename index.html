@@ -24,7 +24,6 @@
         }
 
         /* Start Screen */
-        #start-screen { display: flex; flex-direction: column; align-items: center; }
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
@@ -32,17 +31,20 @@
 
         /* Game UI */
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
-        #game-ui { position: absolute; top: 20px; left: 20px; font-size: 20px; color: #ff4d6d; font-weight: bold; }
-        #health-ui { position: absolute; top: 20px; right: 20px; font-size: 20px; letter-spacing: 5px; }
+        #game-ui { position: absolute; top: 20px; left: 20px; font-size: 18px; color: #ff4d6d; font-weight: bold; }
+        #health-ui { position: absolute; top: 20px; right: 20px; font-size: 18px; letter-spacing: 3px; }
+        
         .game-heart { position: absolute; font-size: 45px; padding: 25px; cursor: pointer; user-select: none; animation: fall linear forwards; z-index: 600; touch-action: none; }
+        .power-up { font-size: 55px; filter: drop-shadow(0 0 10px gold); animation: fall linear forwards, spin 2s infinite linear; }
+        
         @keyframes fall { to { transform: translateY(110vh); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Envelope / Folded Letter Transition */
+        /* Envelope & Message */
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
-        .envelope { width: 150px; height: 100px; background: #fff9e6; border: 2px solid #e0d8c3; position: relative; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        .envelope::after { content: '❤️'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; }
+        .envelope { width: 140px; height: 90px; background: #fff9e6; border: 2px solid #e0d8c3; position: relative; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .envelope::after { content: '💌'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; }
 
-        /* Actual Message Container */
         #message-container { 
             width: 92%; max-width: 450px; display: none; padding: 35px 25px; 
             background: #fff9e6; color: #2c3e50; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -51,14 +53,14 @@
             opacity: 0; border-radius: 4px;
         }
         #message-container.open { display: block; transform: scaleY(1) rotate(-0.5deg); opacity: 1; }
-        #message { font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.35; text-align: left; opacity: 0; transition: opacity 0.8s ease-in 1s; margin: 0; }
+        #message { font-family: 'Caveat', cursive; font-size: 21px; line-height: 1.4; text-align: left; opacity: 0; transition: opacity 0.8s ease-in 1s; margin: 0; }
 
         #question-area { opacity: 0; transition: opacity 1s ease-in; margin-top: 25px; pointer-events: none; }
-        .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; z-index: 10; }
+        .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; }
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s; z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
 
-        /* Effects */
+        /* Background Effects */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart-float { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
@@ -69,28 +71,27 @@
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
-        <p class="sub-text">Since the day I first said I love you</p>
+        <p class="sub-text">Prove your love to unlock the letter</p>
         <div id="counter">Loading...</div>
-        <button class="btn-main" onclick="startGame()">Click here, Haya</button>
+        <button class="btn-main" onclick="startGame()">Start Challenge</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">Score: <span id="score">0</span> / 10</div>
+        <div id="game-ui">Love Collected: <span id="score">0</span> / 20</div>
         <div id="health-ui">❤️❤️❤️</div>
     </div>
 
     <div id="envelope-container">
         <div class="envelope"></div>
-        <p style="color: #ffd6e0; margin-bottom: 20px; font-size: 18px;">You collected enough love!</p>
-        <button class="btn-main" onclick="openLetter()">Open Letter?</button>
-        <button onclick="location.reload()" style="background:none; border:none; color:white; opacity:0.5; margin-top:15px; cursor:pointer;">Not now</button>
+        <p style="color: #ffd6e0; margin-bottom: 20px; font-size: 18px;">Challenge Complete!</p>
+        <button class="btn-main" onclick="openLetter()">Open My Letter</button>
     </div>
 
     <div id="message-container">
         <p id="message">With every passing day, my love for you grows even stronger. Every time I hear your voice, I fall a little deeper, like you’ve become a part of me a part I never want to let go. I feel so lucky to call you mine, and I truly treasure every moment you spend with me. I’m so proud of the amazing, brave girl you’ve become. I truly love you with all my heart, and I always wish you the very best.<br><br>Show those nurses that my nurse is the absolute best there is!<br><br>—M</p>
         
         <div id="question-area">
-            <p style="font-size: 20px; font-weight: bold; color: #ff4d6d; font-family: sans-serif; margin: 0;">💍 Will you stay with me forever?</p>
+            <p style="font-size: 19px; font-weight: bold; color: #ff4d6d; font-family: sans-serif; margin: 0;">💍 Will you stay with me forever?</p>
             <div class="button-wrapper">
                 <button id="yesBtn" class="yes-btn" onclick="sayYes()">Yes!</button>
                 <button id="noBtn" class="no-btn" style="bottom: 0;">No</button>
@@ -117,29 +118,43 @@
         let score = 0;
         let lives = 3;
         let gameActive = false;
-        const targetScore = 10;
+        const targetScore = 20;
 
         function startGame() {
             document.getElementById("start-screen").style.display = "none";
             document.getElementById("game-container").style.display = "block";
             gameActive = true;
-            spawnHeart();
+            spawnLoop();
         }
 
-        function spawnHeart() {
+        function spawnLoop() {
             if (!gameActive) return;
+            
+            // Randomly decide between regular heart or Golden Power-up
+            const isPowerUp = Math.random() > 0.92; 
+            spawnHeart(isPowerUp);
+            
+            // Speed up spawning as score increases
+            const delay = Math.max(400, 800 - (score * 20));
+            setTimeout(spawnLoop, delay);
+        }
+
+        function spawnHeart(isPowerUp) {
             const h = document.createElement("div");
-            h.className = "game-heart";
-            h.innerHTML = "❤️";
-            h.style.left = Math.random() * 75 + 10 + "vw";
-            h.style.top = "-60px";
-            h.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
+            h.className = isPowerUp ? "game-heart power-up" : "game-heart";
+            h.innerHTML = isPowerUp ? "⭐" : "❤️";
+            h.style.left = Math.random() * 80 + 10 + "vw";
+            h.style.top = "-70px";
+            
+            // Random speed
+            const speed = isPowerUp ? 1.5 : (Math.random() * 1.2 + 1.8);
+            h.style.animationDuration = speed + "s";
             
             const catchHeart = (e) => {
                 if (!gameActive) return;
                 e.preventDefault();
-                score++;
-                document.getElementById("score").innerText = score;
+                score += isPowerUp ? 5 : 1;
+                document.getElementById("score").innerText = Math.min(score, targetScore);
                 h.remove();
                 if (score >= targetScore) endToEnvelope();
             };
@@ -151,15 +166,16 @@
             h.addEventListener('animationend', () => {
                 if (h.parentNode) {
                     h.remove();
-                    lives--;
-                    updateLives();
-                    if (lives <= 0) {
-                        alert("Game Over! Try again ❤️");
-                        location.reload();
+                    if (!isPowerUp) { // Missing a star doesn't hurt, only missing hearts
+                        lives--;
+                        updateLives();
+                        if (lives <= 0) {
+                            alert("You ran out of love! Try again ❤️");
+                            location.reload();
+                        }
                     }
                 }
             });
-            setTimeout(spawnHeart, 800);
         }
 
         function updateLives() {
@@ -225,6 +241,7 @@
             }
         }
 
+        // --- STARS ---
         for (let i = 0; i < 60; i++) {
             const s = document.createElement("div");
             s.className = "star";
