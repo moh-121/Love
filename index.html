@@ -16,17 +16,18 @@
         }
 
         /* UI Styling */
-        h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; }
+        h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 15px rgba(255, 77, 109, 0.4); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { 
             padding: 18px 45px; font-size: 20px; background: linear-gradient(45deg, #ff4d6d, #ff758c); 
-            color: white; border: none; border-radius: 50px; cursor: pointer; z-index: 100;
+            color: white; border: none; border-radius: 50px; cursor: pointer; z-index: 100; font-weight: bold;
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.3);
         }
 
         /* Game Elements */
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
-        #game-ui { position: absolute; top: 25px; left: 20px; font-size: 18px; color: #ff4d6d; font-weight: bold; }
+        #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; letter-spacing: 1px; }
         #health-ui { position: absolute; top: 25px; right: 20px; font-size: 20px; }
         
         .falling-item { 
@@ -66,19 +67,19 @@
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
-        <p class="sub-text">Prove your love to unlock the letter</p>
+        <p class="sub-text">Collect 50 love points to unlock the letter</p>
         <div id="counter">Loading...</div>
         <button class="btn-main" onclick="initAndStart()">Start Challenge</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">SCORE: <span id="score">0</span> / 50</div>
+        <div id="game-ui">LOVE COLLECTED: <span id="score">0</span> / 50</div>
         <div id="health-ui">❤️❤️❤️</div>
     </div>
 
     <div id="envelope-container">
         <div class="envelope"></div>
-        <p style="color: #ffd6e0; margin-bottom: 25px; font-size: 20px;">You did it! ❤️</p>
+        <p style="color: #ffd6e0; margin-bottom: 25px; font-size: 20px;">Haya, you did it! ❤️</p>
         <button class="btn-main" onclick="openLetterWithSound()">Open My Letter</button>
     </div>
 
@@ -95,7 +96,7 @@
     </div>
 
     <script>
-        // --- IMPROVED AUDIO ENGINE ---
+        // --- AUDIO ENGINE ---
         let audioCtx;
 
         function initAudio() {
@@ -108,7 +109,7 @@
         }
 
         function playSfx(freq, type, duration, vol=0.1) {
-            if (!audioCtx) return;
+            if (!audioCtx || audioCtx.state !== 'running') return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
@@ -122,19 +123,19 @@
         }
 
         const sfx = {
-            pop: () => playSfx(600, 'sine', 0.1),
+            pop: () => playSfx(600, 'sine', 0.1, 0.12),
             star: () => { 
-                playSfx(800, 'triangle', 0.1); 
-                setTimeout(()=>playSfx(1200, 'triangle', 0.15), 100); 
+                playSfx(880, 'triangle', 0.1, 0.1); 
+                setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.08), 80); 
             },
-            miss: () => playSfx(150, 'sawtooth', 0.2, 0.05),
+            miss: () => playSfx(180, 'sawtooth', 0.2, 0.06),
             paper: () => {
-                for(let i=0; i<10; i++) {
-                    setTimeout(() => playSfx(Math.random()*1500+500, 'sawtooth', 0.04, 0.01), i*30);
+                for(let i=0; i<12; i++) {
+                    setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.015), i*35);
                 }
             },
             win: () => {
-                [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120));
+                [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.08), i*120));
             }
         };
 
@@ -142,9 +143,18 @@
         let score = 0; let lives = 3; let gameActive = false; const targetScore = 50;
 
         function initAndStart() {
-            initAudio(); // Initialize audio on first click
-            sfx.pop();   // Play a test sound immediately
-            startGame();
+            initAudio(); 
+            // Small silent oscillator to "unlock" the audio on mobile
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+            
+            setTimeout(() => {
+                sfx.pop();
+                startGame();
+            }, 50);
         }
 
         function startGame() {
@@ -156,9 +166,9 @@
 
         function spawnLoop() {
             if (!gameActive) return;
-            const isPowerUp = Math.random() > 0.85; 
+            const isPowerUp = Math.random() > 0.82; 
             spawnItem(isPowerUp);
-            setTimeout(spawnLoop, Math.max(300, 900 - (score * 10)));
+            setTimeout(spawnLoop, Math.max(280, 850 - (score * 12)));
         }
 
         function spawnItem(isPowerUp) {
@@ -167,7 +177,7 @@
             h.innerHTML = isPowerUp ? '<div class="spinner">⭐</div>' : "❤️";
             h.style.left = Math.random() * 80 + 10 + "vw";
             h.style.fontSize = isPowerUp ? "55px" : "45px";
-            h.style.animationDuration = (isPowerUp ? 1.6 : (Math.random() * 1.5 + 1.8)) + "s";
+            h.style.animationDuration = (isPowerUp ? 1.5 : (Math.random() * 1.4 + 1.8)) + "s";
             
             const catchItem = (e) => {
                 if (!gameActive) return;
@@ -179,7 +189,7 @@
                 if (score >= targetScore) endToEnvelope();
             };
 
-            h.addEventListener("touchstart", catchItem);
+            h.addEventListener("touchstart", catchItem, {passive: false});
             h.addEventListener("mousedown", catchItem);
             document.getElementById("game-container").appendChild(h);
 
@@ -208,7 +218,7 @@
         }
 
         function openLetterWithSound() {
-            initAudio(); // Re-check audio state
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             sfx.paper();
             document.getElementById("envelope-container").style.display = "none";
             const container = document.getElementById("message-container");
@@ -249,7 +259,7 @@
 
         function sayYes() {
             sfx.win();
-            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>";
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px; font-family: sans-serif;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>";
         }
 
         // Stars Background
