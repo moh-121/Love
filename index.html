@@ -23,25 +23,31 @@
             touch-action: manipulation;
         }
 
-        /* Start Screen Styles */
+        /* Start Screen */
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 40px; font-size: 20px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); z-index: 100; }
 
-        /* Paper/Letter Styling */
+        /* Paper Folding Animation */
         #message-container { 
             width: 90%; 
             max-width: 450px; 
             display: none; 
             padding: 40px 30px; 
-            background: #fff9e6; /* Old paper color */
+            background: #fff9e6; 
             color: #2c3e50; 
-            border-radius: 2px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 100px rgba(0,0,0,0.05);
-            transform: rotate(-1deg);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: scaleY(0); /* Start folded */
+            transform-origin: top;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
             opacity: 0;
-            transition: opacity 1s ease-in;
+        }
+        
+        #message-container.open {
+            display: block;
+            transform: scaleY(1) rotate(-1deg); /* Unfold */
+            opacity: 1;
         }
         
         #message { 
@@ -49,22 +55,21 @@
             font-size: 24px; 
             line-height: 1.4; 
             text-align: left;
-            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease-in 0.8s; /* Text fades in after unfold */
         }
 
-        /* Question Area (Hidden for 3 seconds) */
         #question-area { 
             opacity: 0; 
-            transition: opacity 1.5s ease-in; 
+            transition: opacity 1s ease-in; 
             margin-top: 20px;
-            pointer-events: none; /* Prevents clicking before visible */
+            pointer-events: none;
         }
         
         .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; position: relative; z-index: 10; }
-        .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.2s ease-out; z-index: 5; cursor: pointer; }
+        .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 100px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
 
-        /* Effects */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
@@ -93,7 +98,7 @@
     </div>
 
     <script>
-        // --- TIMER LOGIC ---
+        // --- TIMER ---
         const startDate = new Date("2025-12-15T00:00:00").getTime();
         function updateCounter() {
             const now = new Date().getTime();
@@ -107,16 +112,19 @@
         setInterval(updateCounter, 1000);
         updateCounter();
 
-        // --- TRANSITION LOGIC ---
+        // --- TRANSITION ---
         function startApp() {
             document.getElementById("start-screen").style.display = "none";
-            const msgContainer = document.getElementById("message-container");
-            msgContainer.style.display = "block";
+            const container = document.getElementById("message-container");
+            container.style.display = "block";
             
-            // Fade in the paper
-            setTimeout(() => { msgContainer.style.opacity = "1"; }, 100);
+            // Trigger unfold animation
+            setTimeout(() => { 
+                container.classList.add('open'); 
+                document.getElementById("message").style.opacity = "1";
+            }, 50);
 
-            // Wait 3 seconds, then show the question and buttons
+            // Wait 3s then show buttons
             setTimeout(() => {
                 const qa = document.getElementById("question-area");
                 qa.style.opacity = "1";
@@ -126,19 +134,24 @@
             createHearts(15);
         }
 
-        // --- RUNAWAY LOGIC ---
+        // --- IMPROVED RUNAWAY (Stay on Screen) ---
         const noBtn = document.getElementById("noBtn");
         function moveNo() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const zones = [
-                {x: 30, y: 30}, {x: w - 120, y: 30}, 
-                {x: 30, y: h - 100}, {x: w - 120, y: h - 100}
-            ];
-            const randomZone = zones[Math.floor(Math.random() * zones.length)];
+            const btnWidth = noBtn.offsetWidth;
+            const btnHeight = noBtn.offsetHeight;
+            
+            // Set safety margin so it doesn't touch the edge
+            const margin = 50;
+            const maxWidth = window.innerWidth - btnWidth - margin;
+            const maxHeight = window.innerHeight - btnHeight - margin;
+
+            // Generate random but safe coordinates
+            const randomX = Math.max(margin, Math.floor(Math.random() * maxWidth));
+            const randomY = Math.max(margin, Math.floor(Math.random() * maxHeight));
+
             noBtn.style.position = 'fixed';
-            noBtn.style.left = randomZone.x + "px";
-            noBtn.style.top = randomZone.y + "px";
+            noBtn.style.left = randomX + "px";
+            noBtn.style.top = randomY + "px";
         }
 
         noBtn.addEventListener("touchstart", function(e) { e.preventDefault(); moveNo(); });
@@ -165,7 +178,7 @@
             }
         }
 
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < 60; i++) {
             const s = document.createElement("div");
             s.className = "star";
             const size = Math.random() * 2 + "px";
