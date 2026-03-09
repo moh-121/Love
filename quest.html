@@ -3,91 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Haya: Tactical Medic ❤️</title>
+    <title>Haya: Rescue Ops ❤️</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background: #05000a; font-family: sans-serif; height: 100vh; }
         
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(to bottom, #0a001a, #1a0033); }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #0a001a; }
         #world { position: absolute; width: 5000px; height: 100%; will-change: transform; z-index: 10; }
 
         /* HUD */
-        #hud { position: fixed; top: 20px; left: 20px; z-index: 500; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; }
         .heart-row { display: flex; gap: 8px; font-size: 26px; margin-bottom: 8px; }
         .dash-outer { width: 120px; height: 12px; background: rgba(0,0,0,0.3); border: 2px solid #fff; border-radius: 6px; overflow: hidden; }
-        #dash-bar { width: 100%; height: 100%; background: #00d4ff; transition: width 0.1s linear; }
+        #dash-bar { width: 100%; height: 100%; background: #00d4ff; }
 
-        /* --- ADVANCED CHARACTER SYSTEM --- */
-        .char { position: absolute; width: 60px; height: 90px; will-change: transform, left, bottom; display: flex; align-items: flex-end; justify-content: center; transform-origin: bottom center; }
+        /* --- CHARACTER DESIGN --- */
+        .char { position: absolute; width: 60px; height: 90px; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; }
         
-        /* State Classes for Anim System */
-        .walking .leg-l { animation: legSwing 0.2s infinite alternate; }
-        .walking .leg-r { animation: legSwing 0.2s infinite alternate-reverse; }
-        .walking .arm-l { animation: armSwing 0.2s infinite alternate; }
-        .walking .arm-r { animation: armSwing 0.2s infinite alternate-reverse; }
-
-        .jumping .leg { transform: translateY(-5px) rotate(10deg); }
-        .jumping .arm { transform: rotate(-40deg); }
-
-        .slashing .arm-r { animation: stab 0.2s ease-out; }
-
-        /* Hierarchical Bone Structure */
-        #haya-visual { position: relative; width: 40px; height: 75px; transform-origin: bottom center; }
+        #haya-visual { position: relative; width: 40px; height: 80px; transform-origin: bottom center; transition: transform 0.1s; }
         
-        .head { position: absolute; width: 26px; height: 26px; background: #ffdbac; border-radius: 50%; top: -5px; left: 7px; z-index: 10; border: 1px solid #e0ac69; }
-        .hair { position: absolute; width: 32px; height: 15px; background: #3d2b1f; border-radius: 15px 15px 0 0; top: -5px; left: -3px; }
+        /* Body Parts */
+        .head { position: absolute; width: 28px; height: 28px; background: #ffdbac; border-radius: 50%; top: 0; left: 6px; z-index: 10; border: 1px solid #d4a373; }
+        .hair { position: absolute; width: 34px; height: 18px; background: #3d2b1f; border-radius: 20px 20px 0 0; top: -4px; left: -3px; }
+        .eye { position: absolute; width: 4px; height: 4px; background: #000; border-radius: 50%; top: 12px; }
+        .eye-l { left: 7px; } .eye-r { left: 17px; }
         
-        .eye { position: absolute; width: 4px; height: 4px; background: #1a1a1a; border-radius: 50%; top: 12px; }
-        .eye-l { left: 6px; } .eye-r { left: 16px; }
+        .torso { position: absolute; width: 34px; height: 40px; background: #fff; border-radius: 8px; top: 25px; left: 3px; z-index: 5; border: 1px solid #ddd; }
+        .cross { color: #ff4d6d; font-size: 14px; position: absolute; top: 12px; left: 10px; font-weight: 900; }
         
-        .torso { position: absolute; width: 34px; height: 42px; background: #fff; border-radius: 10px 10px 4px 4px; top: 20px; left: 3px; z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .cross { color: #ff4d6d; font-size: 14px; position: absolute; top: 15px; left: 11px; font-weight: 900; }
+        .arm { position: absolute; width: 9px; height: 30px; background: #fff; border-radius: 5px; top: 28px; transform-origin: top center; z-index: 4; border-bottom: 4px solid #ffdbac; }
+        .arm-l { left: -4px; }
+        .arm-r { right: -4px; }
         
-        .arm { position: absolute; width: 8px; height: 35px; background: #fff; border-radius: 4px; top: 22px; transform-origin: top center; z-index: 4; border-bottom: 5px solid #ffdbac; }
-        .arm-l { left: -3px; }
-        .arm-r { right: -3px; }
-        
-        .leg { position: absolute; width: 10px; height: 25px; background: #fff; border-radius: 0 0 5px 5px; top: 58px; transform-origin: top center; z-index: 4; border-bottom: 8px solid #1a1a1a; }
-        .leg-l { left: 6px; }
+        .leg { position: absolute; width: 11px; height: 25px; background: #fff; border-radius: 0 0 4px 4px; top: 60px; transform-origin: top center; z-index: 4; border-bottom: 8px solid #222; }
+        .leg-l { left: 5px; }
         .leg-r { left: 24px; }
 
-        /* SWORD SLASH EFFECT */
+        /* ANIMATION STATES */
+        .walking .leg-l { animation: legSwing 0.2s infinite alternate; }
+        .walking .leg-r { animation: legSwing 0.2s infinite alternate-reverse; }
+        .jumping .leg { transform: translateY(-5px) rotate(15deg); }
+        .slashing .arm-r { animation: stab 0.2s ease-out; }
+
+        @keyframes legSwing { from { transform: rotate(-30deg); } to { transform: rotate(30deg); } }
+        @keyframes stab { 0% { transform: rotate(0); } 50% { transform: rotate(-100deg) scaleY(1.5); } 100% { transform: rotate(0); } }
+
+        /* SWORD SLASH */
         #slash-arc {
-            position: absolute; width: 110px; height: 110px;
-            border: 10px solid transparent; border-right-color: rgba(0, 212, 255, 0.9);
-            border-radius: 50%; top: -10px; right: -70px;
-            opacity: 0; pointer-events: none; transform: rotate(-45deg); z-index: 100;
+            position: absolute; width: 100px; height: 100px;
+            border: 10px solid transparent; border-right-color: #00d4ff;
+            border-radius: 50%; top: 0; right: -60px;
+            opacity: 0; pointer-events: none; z-index: 200;
         }
-        .active-slash { animation: slashEffect 0.25s ease-out forwards; }
+        .active-slash { animation: slashEffect 0.2s ease-out forwards; }
+        @keyframes slashEffect { 0% { opacity: 1; transform: rotate(-90deg) scale(0.5); } 100% { opacity: 0; transform: rotate(90deg) scale(1.2); } }
 
-        /* Keyframes */
-        @keyframes legSwing { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
-        @keyframes armSwing { from { transform: rotate(20deg); } to { transform: rotate(-20deg); } }
-        @keyframes stab { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg) scaleY(1.5); } 100% { transform: rotate(0deg); } }
-        @keyframes slashEffect { 0% { opacity: 1; transform: rotate(-90deg) scale(0.5); } 100% { opacity: 0; transform: rotate(90deg) scale(1.3); } }
-
-        /* SQUASH & STRETCH CLASSES */
-        .jump-stretch { transform: scale(0.9, 1.2) !important; }
-        .land-squash { transform: scale(1.3, 0.7) !important; }
-        .dash-flat { transform: scale(1.6, 0.4) !important; }
-
-        /* ENEMIES & OBJECTS */
-        .enemy { position: absolute; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 20; }
-        .germ { background: #8e44ad; border-bottom: 5px solid #4a235a; }
-        .virus { background: #27ae60; border: 3px solid #2ecc71; animation: floatY 2s infinite ease-in-out; }
-        @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
-
-        .platform { position: absolute; background: #ff758c; border-top: 5px solid #ffafbd; border-bottom: 10px solid #a30026; border-radius: 8px; z-index: 10; }
-        .poof { position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; animation: poofAnim 0.4s ease-out forwards; pointer-events: none; }
-        @keyframes poofAnim { to { transform: scale(8); opacity: 0; } }
-
+        /* WORLD OBJECTS */
+        .platform { position: absolute; background: #ff758c; border-top: 6px solid #ffafbd; border-bottom: 12px solid #a30026; border-radius: 10px; z-index: 20; }
+        .enemy { position: absolute; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 30; background: #8e44ad; border-bottom: 4px solid #4a235a; }
+        
         /* CONTROLS */
-        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 1000; }
-        .btn-group { display: flex; gap: 12px; align-items: flex-end; }
-        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; backdrop-filter: blur(8px); }
-        .atk-btn { background: #fff; color: #333; width: 90px; height: 90px; border: none; box-shadow: 0 6px #bbb; font-size: 35px; }
-        .jump-btn { width: 110px; height: 110px; background: #ff4d6d; border: none; box-shadow: 0 8px #a30026; font-weight: bold; }
+        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 2000; }
+        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; backdrop-filter: blur(10px); }
+        .atk-btn { background: #fff; color: #333; width: 90px; height: 90px; border: none; font-size: 35px; }
+        .jump-btn { width: 100px; height: 100px; background: #ff4d6d; border: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -114,16 +94,15 @@
                 <div id="slash-arc"></div>
             </div>
         </div>
-        
-        <div id="enemy-layer"></div>
         <div id="platforms-layer"></div>
+        <div id="enemy-layer"></div>
     </div>
 
     <div id="controls">
-        <div class="btn-group"><div class="btn" id="lBtn">⬅️</div><div class="btn" id="rBtn">➡️</div></div>
-        <div class="btn-group">
+        <div style="display:flex; gap:10px;"><div class="btn" id="lBtn">⬅️</div><div class="btn" id="rBtn">➡️</div></div>
+        <div style="display:flex; gap:10px; align-items: flex-end;">
             <div class="btn atk-btn" id="aBtn">💉</div>
-            <div class="btn" id="dBtn" style="background:#00d4ff; border:none; box-shadow:0 6px #0089a7;">⚡</div>
+            <div class="btn" id="dBtn" style="background:#00d4ff; border:none;">⚡</div>
             <div class="btn jump-btn" id="jBtn">JUMP</div>
         </div>
     </div>
@@ -134,30 +113,20 @@
     const visual = document.getElementById('haya-visual'), slash = document.getElementById('slash-arc');
     const dashBar = document.getElementById('dash-bar');
 
+    // Physics Tuning
     let pX = 150, pY = 400, vX = 0, vY = 0;
-    let health = 3, jumps = 0, isDashing = false, dashReady = true, camX = 0;
-    const config = { gravity: 0.9, jump: -21, speed: 6.0, friction: 0.75, dashPower: 18 };
+    let health = 3, jumps = 0, isGrounded = false, dashReady = true;
+    const config = { gravity: 1.0, jump: -22, speed: 7.0, friction: 0.8, dashPower: 20 };
 
     const platforms = [
-        {x: 0, y: 150, w: 700}, {x: 850, y: 280, w: 350}, {x: 1300, y: 450, w: 250},
-        {x: 1700, y: 250, w: 500}, {x: 2350, y: 420, w: 300}, {x: 2800, y: 300, w: 1000}
-    ];
-
-    let enemyData = [
-        {x: 950, y: 320, type: 0, range: 100, startX: 950, dir: 1, speed: 2},
-        {x: 1800, y: 500, type: 1, range: 100, startY: 500, dir: 1, speed: 2.5}
+        {x: 0, y: 100, w: 800}, {x: 900, y: 250, w: 400}, {x: 1400, y: 400, w: 300},
+        {x: 1800, y: 200, w: 600}, {x: 2500, y: 350, w: 400}
     ];
 
     platforms.forEach(p => {
         const d = document.createElement('div'); d.className = 'platform';
-        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'45px'});
+        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'50px'});
         document.getElementById('platforms-layer').appendChild(d);
-    });
-
-    enemyData.forEach((en, i) => {
-        const d = document.createElement('div'); d.className = `enemy ${en.type === 0 ? 'germ' : 'virus'}`;
-        d.id = 'en-'+i; d.innerHTML = en.type === 0 ? '😠' : '🦠';
-        document.getElementById('enemy-layer').appendChild(d);
     });
 
     const keys = { left: false, right: false };
@@ -169,22 +138,12 @@
 
     setup('lBtn', () => keys.left = true, () => keys.left = false);
     setup('rBtn', () => keys.right = true, () => keys.right = false);
+    setup('jBtn', () => { if(jumps < 2) { vY = config.jump; jumps++; player.classList.add('jumping'); } });
     
-    setup('jBtn', () => {
-        if(jumps < 2) { 
-            vY = config.jump; jumps++; 
-            animate('jump-stretch', 300);
-            player.classList.add('jumping');
-        }
-    });
-
     setup('dBtn', () => {
-        if(dashReady && !isDashing) {
-            isDashing = true; dashReady = false;
-            vX = (keys.left ? -1 : (keys.right ? 1 : (player.style.transform.includes('-1') ? -1 : 1))) * config.dashPower;
-            dashBar.style.width = "0%";
-            animate('dash-flat', 250);
-            setTimeout(() => isDashing = false, 250);
+        if(dashReady) {
+            vX = (player.style.transform.includes('-1') ? -1 : 1) * config.dashPower;
+            dashReady = false; dashBar.style.width = "0%";
             setTimeout(() => { dashReady = true; dashBar.style.width = "100%"; }, 1000);
         }
     });
@@ -192,98 +151,45 @@
     setup('aBtn', () => {
         slash.classList.add('active-slash');
         player.classList.add('slashing');
-        setTimeout(() => {
-            slash.classList.remove('active-slash');
-            player.classList.remove('slashing');
-        }, 250);
-        
-        // Attack Hitbox
-        enemyData.forEach((en, i) => {
-            if(en.dead) return;
-            const dist = Math.sqrt(Math.pow(pX+30-en.x, 2) + Math.pow(pY+45-en.y, 2));
-            if(dist < 110) {
-                en.dead = true; document.getElementById('en-'+i).style.display = 'none';
-                spawnPoof(en.x, en.y);
-            }
-        });
+        setTimeout(() => { slash.classList.remove('active-slash'); player.classList.remove('slashing'); }, 200);
     });
 
-    function animate(cls, dur) {
-        visual.classList.add(cls);
-        setTimeout(() => visual.classList.remove(cls), dur);
-    }
-
-    function spawnPoof(x, y) {
-        const p = document.createElement('div'); p.className = 'poof';
-        p.style.left = x+'px'; p.style.bottom = y+'px';
-        world.appendChild(p); setTimeout(() => p.remove(), 400);
-    }
-
     function update() {
-        if(!isDashing) {
-            if(keys.left) vX = -config.speed;
-            else if(keys.right) vX = config.speed;
-            else vX *= config.friction;
-        }
-
-        // Animation State Management
-        if(Math.abs(vX) > 0.5 && isGrounded) player.classList.add('walking');
-        else player.classList.remove('walking');
-
-        if(isGrounded) player.classList.remove('jumping');
-
-        let oldVY = vY;
+        vX = keys.left ? -config.speed : (keys.right ? config.speed : vX * config.friction);
         vY += config.gravity; pX += vX; pY -= vY;
 
-        // Collision & Landing Squash
-        let onGroundNow = false;
+        // Ground Check
+        let grounded = false;
         platforms.forEach(p => {
-            if (pX + 35 > p.x && pX + 5 < p.x + p.w) {
-                let top = p.y + 45;
-                if (vY > 0 && pY <= top && pY > top - 30) { 
-                    if(oldVY > 5) animate('land-squash', 200);
-                    pY = top; vY = 0; jumps = 0; 
-                    onGroundNow = true;
+            if (pX + 40 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY <= p.y + 50 && pY > p.y) {
+                    pY = p.y + 50; vY = 0; jumps = 0; grounded = true;
                 }
             }
         });
-        isGrounded = onGroundNow;
+        isGrounded = grounded;
 
-        // Enemy AI
-        enemyData.forEach((en, i) => {
-            if(en.dead) return;
-            const el = document.getElementById('en-'+i);
-            if(en.type === 0) {
-                en.x += en.dir * en.speed;
-                if(Math.abs(en.x - en.startX) > en.range) en.dir *= -1;
-            } else {
-                en.y += en.dir * en.speed;
-                if(Math.abs(en.y - en.startY) > en.range) en.dir *= -1;
-            }
-            el.style.left = en.x+'px'; el.style.bottom = en.y+'px';
-            if(checkHit(player, el)) reset();
-        });
+        // Animate
+        if(Math.abs(vX) > 1 && isGrounded) player.classList.add('walking');
+        else player.classList.remove('walking');
+        if(isGrounded) player.classList.remove('jumping');
 
-        if(pY < -100) reset();
-        if(pX < 0) pX = 0;
-
-        // Visual orientation (Corrected scale system)
+        // Facing Direction
         if(vX > 0.1) player.style.transform = "scaleX(1)";
         else if(vX < -0.1) player.style.transform = "scaleX(-1)";
 
-        camX += (-(pX - window.innerWidth/2) - camX) * 0.1;
-        world.style.transform = `translateX(${camX}px)`;
-        player.style.left = pX+'px'; player.style.bottom = pY+'px';
+        // Camera Follow
+        let camTarget = -(pX - window.innerWidth/2);
+        if(camTarget > 0) camTarget = 0;
+        world.style.transform = `translateX(${camTarget}px)`;
+
+        player.style.left = pX + 'px';
+        player.style.bottom = pY + 'px';
+
+        if(pY < -100) { pX = 150; pY = 400; vY = 0; } // Auto-respawn
 
         requestAnimationFrame(update);
     }
-
-    function checkHit(a, b) {
-        const r1 = a.getBoundingClientRect(), r2 = b.getBoundingClientRect();
-        return !(r1.right < r2.left+15 || r1.left > r2.right-15 || r1.bottom < r2.top+15 || r1.top > r2.bottom-15);
-    }
-
-    function reset() { pX = 150; pY = 400; vX = 0; vY = 0; }
 
     update();
 </script>
