@@ -29,10 +29,20 @@
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 40px; font-size: 20px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); z-index: 100; }
 
-        /* Game Overlay */
-        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
-        #game-ui { position: absolute; top: 20px; font-size: 24px; color: #ff4d6d; width: 100%; text-align: center; font-weight: bold; opacity: 0; transition: opacity 0.5s; }
-        .game-heart { position: absolute; cursor: pointer; pointer-events: auto; font-size: 40px; user-select: none; animation: fall linear forwards; }
+        /* Game Elements */
+        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
+        #game-ui { position: absolute; top: 20px; left: 20px; font-size: 20px; color: #ff4d6d; font-weight: bold; }
+        #health-ui { position: absolute; top: 20px; right: 20px; font-size: 20px; letter-spacing: 5px; }
+        
+        .game-heart { 
+            position: absolute; 
+            font-size: 45px; 
+            padding: 20px; /* Extra hit area for fingers */
+            cursor: pointer; 
+            user-select: none; 
+            animation: fall linear forwards;
+            z-index: 600;
+        }
         @keyframes fall { to { transform: translateY(110vh); } }
 
         /* Paper Unfolding */
@@ -51,6 +61,7 @@
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s; z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
 
+        /* Stars & Floaters */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart-float { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
@@ -63,11 +74,12 @@
         <h1>For Haya ❤️</h1>
         <p class="sub-text">Since the day I first said I love you</p>
         <div id="counter">Loading...</div>
-        <button class="btn-main" onclick="startGame()">Click here, Haya</button>
+        <button class="btn-main" id="startBtn" onclick="startGame()">Click here, Haya</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">Catch 10 hearts: <span id="score">0</span></div>
+        <div id="game-ui">Hearts: <span id="score">0</span> / 10</div>
+        <div id="health-ui" id="health-display">❤️❤️❤️</div>
     </div>
 
     <div id="message-container">
@@ -99,13 +111,18 @@
 
         // --- GAME LOGIC ---
         let score = 0;
+        let lives = 3;
         let gameActive = false;
         const targetScore = 10;
+        const gameContainer = document.getElementById("game-container");
 
         function startGame() {
+            score = 0;
+            lives = 3;
+            document.getElementById("score").innerText = score;
+            document.getElementById("health-ui").innerText = "❤️❤️❤️";
             document.getElementById("start-screen").style.display = "none";
-            document.getElementById("game-container").style.display = "block";
-            document.getElementById("game-ui").style.opacity = "1";
+            gameContainer.style.display = "block";
             gameActive = true;
             spawnHeart();
         }
@@ -115,28 +132,58 @@
             const h = document.createElement("div");
             h.className = "game-heart";
             h.innerHTML = "❤️";
-            h.style.left = Math.random() * 80 + 10 + "vw";
-            h.style.top = "-50px";
-            h.style.animationDuration = (Math.random() * 2 + 2) + "s";
+            h.style.left = Math.random() * 70 + 10 + "vw";
+            h.style.top = "-60px";
+            h.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
             
-            h.onclick = function() {
+            // Touch/Click Handler
+            const collect = (e) => {
+                if (!gameActive) return;
+                e.preventDefault();
                 score++;
                 document.getElementById("score").innerText = score;
                 h.remove();
-                if (score >= targetScore) {
-                    endGame();
-                }
+                if (score >= targetScore) endGame(true);
             };
+
+            h.addEventListener("touchstart", collect);
+            h.addEventListener("mousedown", collect);
             
-            document.getElementById("game-container").appendChild(h);
-            setTimeout(() => { if(h.parentNode) h.remove(); }, 4000);
-            setTimeout(spawnHeart, 600);
+            gameContainer.appendChild(h);
+
+            // Check if missed
+            h.addEventListener('animationend', () => {
+                if (h.parentNode) {
+                    h.remove();
+                    lives--;
+                    updateHealth();
+                    if (lives <= 0) endGame(false);
+                }
+            });
+
+            setTimeout(spawnHeart, 800);
         }
 
-        function endGame() {
+        function updateHealth() {
+            let hText = "";
+            for(let i=0; i<lives; i++) hText += "❤️";
+            document.getElementById("health-ui").innerText = hText;
+        }
+
+        function endGame(win) {
             gameActive = false;
-            document.getElementById("game-ui").style.opacity = "0";
-            setTimeout(showLetter, 500);
+            // Clear falling hearts
+            const activeHearts = document.querySelectorAll(".game-heart");
+            activeHearts.forEach(h => h.remove());
+
+            if (win) {
+                gameContainer.style.display = "none";
+                showLetter();
+            } else {
+                alert("Game Over! Try again for a surprise ❤️");
+                gameContainer.style.display = "none";
+                document.getElementById("start-screen").style.display = "flex";
+            }
         }
 
         function showLetter() {
