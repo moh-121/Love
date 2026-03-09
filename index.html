@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Haya ❤️</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: clamp(40px, 8vw, 60px);
+            color: #ff4d6d;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 77, 109, 0.5);
+        }
+
+        .highlight-date {
+            color: #ffd6e0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        #counter {
+            font-size: clamp(18px, 4vw, 24px);
+            color: #ffb3c1;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px 35px;
+            font-size: 18px;
+            background: #ff4d6d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4);
+            z-index: 10;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: #ff758f;
+        }
+
+        #message-container {
+            margin-top: 25px;
+            max-width: 85%;
+            width: 600px;
+            min-height: 150px;
+        }
+
+        #message {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #ffd6e0;
+            opacity: 0;
+            transition: 2s;
+        }
+
+        #question {
+            margin-top: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0;
+            transition: 3s;
+            color: #ff4d6d;
+        }
+
+        /* Stars */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle var(--duration) infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: var(--opacity); }
+        }
+
+        /* Hearts */
+        .heart {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp var(--speed) linear forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>For Haya ❤️</h1>
+    <p class="highlight-date">Since December 15, 2025</p>
+    <p id="counter">Calculating our time...</p>
+
+    <button id="mainBtn" onclick="showLove()">Click here, Haya</button>
+
+    <div id="message-container">
+        <p id="message"></p>
+        <div id="question">
+            💍 Will you stay with me forever?
+        </div>
+    </div>
+
+    <script>
+        // --- COUNTER LOGIC ---
+        const start = new Date("December 15, 2025 00:00:00").getTime();
+
+        function updateCounter() {
+            const now = new Date().getTime();
+            const diff = now - start;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById("counter").innerHTML = 
+                `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+        }
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        // --- SHOW LOVE LOGIC ---
+        function showLove() {
+            const msg = document.getElementById("message");
+            const btn = document.getElementById("mainBtn");
+            
+            btn.style.display = 'none';
+            msg.style.opacity = 1;
+            msg.innerHTML = "With each passing day, my love for you grows stronger, and with each call, I love your voice even more. I feel like you've become a part of me, an essential part of my personality, something I don't want to lose. I'm so lucky to be able to call you mine.";
+
+            setTimeout(() => {
+                document.getElementById("question").style.opacity = 1;
+            }, 2000);
+
+            createHearts();
+        }
+
+        // --- VISUAL EFFECTS ---
+        function createHearts() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement("div");
+                    heart.className = "heart";
+                    heart.innerHTML = "❤️";
+                    heart.style.left = Math.random() * 100 + "vw";
+                    heart.style.top = "100vh";
+                    heart.style.fontSize = (Math.random() * 20 + 10) + "px";
+                    heart.style.setProperty('--speed', (Math.random() * 3 + 2) + "s");
+                    document.body.appendChild(heart);
+                    
+                    setTimeout(() => heart.remove(), 5000);
+                }, i * 100);
+            }
+        }
+
+        // Generate Twinkling Stars
+        for (let i = 0; i < 200; i++) {
+            const star = document.createElement("div");
+            star.className = "star";
+            const size = Math.random() * 3 + "px";
+            star.style.width = size;
+            star.style.height = size;
+            star.style.left = Math.random() * 100 + "vw";
+            star.style.top = Math.random() * 100 + "vh";
+            star.style.setProperty('--duration', (Math.random() * 3 + 2) + "s");
+            star.style.setProperty('--opacity', Math.random());
+            star.style.animationDelay = Math.random() * 5 + "s";
+            document.body.appendChild(star);
+        }
+    </script>
+
+</body>
+</html>
