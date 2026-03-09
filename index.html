@@ -31,44 +31,46 @@
 
         /* Paper Folding Animation */
         #message-container { 
-            width: 90%; 
+            width: 92%; 
             max-width: 450px; 
             display: none; 
-            padding: 40px 30px; 
+            padding: 35px 25px; 
             background: #fff9e6; 
             color: #2c3e50; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transform: scaleY(0); /* Start folded */
+            transform: scaleY(0); 
             transform-origin: top;
-            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
             opacity: 0;
+            border-radius: 4px;
         }
         
         #message-container.open {
             display: block;
-            transform: scaleY(1) rotate(-1deg); /* Unfold */
+            transform: scaleY(1) rotate(-0.5deg); 
             opacity: 1;
         }
         
         #message { 
             font-family: 'Caveat', cursive; 
-            font-size: 24px; 
-            line-height: 1.4; 
+            font-size: 22px; 
+            line-height: 1.35; 
             text-align: left;
             opacity: 0;
-            transition: opacity 0.8s ease-in 0.8s; /* Text fades in after unfold */
+            transition: opacity 0.8s ease-in 1s; 
+            margin: 0;
         }
 
         #question-area { 
             opacity: 0; 
             transition: opacity 1s ease-in; 
-            margin-top: 20px;
+            margin-top: 25px;
             pointer-events: none;
         }
         
         .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; position: relative; z-index: 10; }
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 999; cursor: pointer; }
-        .button-wrapper { position: relative; height: 100px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
+        .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
 
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
@@ -86,10 +88,10 @@
     </div>
 
     <div id="message-container">
-        <p id="message">With every passing day, my love for you only grows stronger. Every time I hear your voice, I fall a little more like you’ve become a part of me, a part I never want to let go. I feel so lucky to call you mine, and I will always love you.</p>
+        <p id="message">With every passing day, my love for you grows even stronger. Every time I hear your voice, I fall a little deeper, like you’ve become a part of me—a part I never want to let go. I feel so lucky to call you mine, and I truly treasure every moment you spend with me. I’m so proud of the amazing, brave girl you’ve become. I truly love you with all my heart, and I always wish you the very best.<br><br>Show those nurses that my nurse is the absolute best there is!<br><br>—M</p>
         
         <div id="question-area">
-            <p style="font-size: 22px; font-weight: bold; color: #ff4d6d; font-family: sans-serif;">💍 Will you stay with me forever?</p>
+            <p style="font-size: 20px; font-weight: bold; color: #ff4d6d; font-family: sans-serif; margin: 0;">💍 Will you stay with me forever?</p>
             <div class="button-wrapper">
                 <button id="yesBtn" class="yes-btn" onclick="sayYes()">Yes!</button>
                 <button id="noBtn" class="no-btn" style="bottom: 0;">No</button>
@@ -118,34 +120,29 @@
             const container = document.getElementById("message-container");
             container.style.display = "block";
             
-            // Trigger unfold animation
             setTimeout(() => { 
                 container.classList.add('open'); 
                 document.getElementById("message").style.opacity = "1";
             }, 50);
 
-            // Wait 3s then show buttons
             setTimeout(() => {
                 const qa = document.getElementById("question-area");
                 qa.style.opacity = "1";
                 qa.style.pointerEvents = "auto";
-            }, 3000);
+            }, 4500); // Wait slightly longer for her to read the beautiful message
             
             createHearts(15);
         }
 
-        // --- IMPROVED RUNAWAY (Stay on Screen) ---
+        // --- RUNAWAY ---
         const noBtn = document.getElementById("noBtn");
         function moveNo() {
             const btnWidth = noBtn.offsetWidth;
             const btnHeight = noBtn.offsetHeight;
-            
-            // Set safety margin so it doesn't touch the edge
-            const margin = 50;
+            const margin = 60;
             const maxWidth = window.innerWidth - btnWidth - margin;
             const maxHeight = window.innerHeight - btnHeight - margin;
 
-            // Generate random but safe coordinates
             const randomX = Math.max(margin, Math.floor(Math.random() * maxWidth));
             const randomY = Math.max(margin, Math.floor(Math.random() * maxHeight));
 
