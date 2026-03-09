@@ -2,26 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Haya: Clinical Cube</title>
+    <title>Haya: Clinical Kinetic</title>
     <style>
-        :root { --cyan: #00f2ff; --red: #ff0055; --bg: #030109; }
+        :root { --cyan: #00f2ff; --white: #ffffff; --red: #ff0055; --bg: #05020a; }
         body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Inter', sans-serif; }
 
-        /* --- STAGE --- */
+        /* --- STAGE & CAMERA --- */
         #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         #world { position: absolute; width: 100%; height: 100%; will-change: transform; }
 
-        /* --- FIXED PLATFORMS --- */
-        .platform { 
-            position: absolute; 
-            background: linear-gradient(180deg, #1a0b2e 0%, #05020a 100%); 
-            border-top: 2px solid var(--cyan); 
-            border-radius: 4px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            z-index: 5;
-        }
-
-        /* --- HAYA: THE NURSE CUBE --- */
+        /* --- HAYA: THE NURSE CUBE (POLISHED) --- */
         #haya { 
             position: absolute; width: 60px; height: 60px; 
             z-index: 100; will-change: transform;
@@ -30,144 +20,161 @@
 
         .haya-body {
             position: relative; width: 100%; height: 100%;
-            background: #f5f5f5; border-radius: 12px;
-            box-shadow: inset -4px -4px 10px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            border-radius: 10px; border: 2px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(0,0,0,0.1);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border: 1px solid #fff;
+            overflow: hidden;
         }
 
-        /* Nurse Details */
-        .cap { position: absolute; top: -12px; width: 30px; height: 12px; background: #fff; border-radius: 5px 5px 0 0; border: 1px solid #ddd; display: flex; justify-content: center; }
-        .cap::after { content: '✚'; color: var(--red); font-size: 10px; font-weight: bold; }
-        
-        .eyes { display: flex; gap: 12px; }
-        .eye { width: 10px; height: 14px; background: #111; border-radius: 50%; position: relative; }
-        .pupil { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; top: 2px; left: 3px; }
+        /* Nurse Cap */
+        .cap { position: absolute; top: -2px; width: 26px; height: 10px; background: #fff; border-radius: 4px 4px 0 0; border: 1px solid #ddd; z-index: 10; display: flex; justify-content: center; }
+        .cap::after { content: '✚'; color: var(--red); font-size: 10px; font-weight: bold; position: absolute; top: -2px; }
 
-        /* Summoned Syringe */
-        #weapon {
-            position: absolute; right: -15px; top: 10px; width: 8px; height: 45px;
-            background: var(--cyan); border-radius: 4px; opacity: 0;
-            box-shadow: 0 0 20px var(--cyan); transform: scaleY(0);
-            transition: 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* Animated Eyes */
+        .eyes { display: flex; gap: 10px; transition: transform 0.1s; }
+        .eye { width: 12px; height: 18px; background: #111; border-radius: 50%; position: relative; overflow: hidden; }
+        .pupil { position: absolute; width: 5px; height: 7px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.1s; }
+
+        /* --- COMBAT VISUAL EFFECTS --- */
+        .slash-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 160px; height: 160px; pointer-events: none;
         }
-        .attacking #weapon { opacity: 1; transform: scaleY(1.2) rotate(15deg); }
 
-        /* --- EFFECTS --- */
-        .slash-fx { 
-            position: absolute; inset: -40px; border: 4px solid var(--cyan); 
-            border-radius: 50%; border-right-color: transparent; border-bottom-color: transparent;
-            opacity: 0; pointer-events: none; transform: rotate(-45deg);
+        /* The "Energy Arc" Slash */
+        .energy-arc {
+            position: absolute; width: 100%; height: 100%;
+            border: 8px solid var(--cyan); border-radius: 50%;
+            border-right-color: transparent; border-bottom-color: transparent; border-top-color: transparent;
+            opacity: 0; filter: blur(1px) drop-shadow(0 0 10px var(--cyan));
         }
-        .attacking .slash-fx { animation: slashPulse 0.3s ease-out; }
-        @keyframes slashPulse { 0% { opacity: 1; transform: scale(0.5) rotate(-45deg); } 100% { opacity: 0; transform: scale(1.5) rotate(45deg); } }
 
-        #hud { position: fixed; top: 30px; left: 30px; color: var(--cyan); letter-spacing: 3px; font-size: 12px; z-index: 1000; }
+        .attacking .energy-arc { animation: arcStrike 0.25s cubic-bezier(0.1, 0.9, 0.2, 1); }
+
+        @keyframes arcStrike {
+            0% { opacity: 1; transform: rotate(-60deg) scale(0.5); border-left-width: 20px; }
+            100% { opacity: 0; transform: rotate(120deg) scale(1.5); border-left-width: 2px; }
+        }
+
+        /* --- ENVIRONMENT --- */
+        .platform { 
+            position: absolute; background: linear-gradient(180deg, #160d26, #05020a); 
+            border-top: 3px solid rgba(0, 242, 255, 0.4); border-radius: 6px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+        }
+
+        /* UI */
+        #hud { position: fixed; top: 30px; left: 30px; color: var(--cyan); letter-spacing: 4px; font-weight: bold; text-shadow: 0 0 10px var(--cyan); font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="stage">
-    <div id="hud">SYSTEM // HAYA_CUBE_V2</div>
+    <div id="hud">HAYA // KINETIC_NURSE</div>
     <div id="world">
         <div id="haya">
-            <div class="slash-fx"></div>
+            <div class="slash-container"><div class="energy-arc"></div></div>
             <div class="haya-body">
                 <div class="cap"></div>
                 <div class="eyes">
-                    <div class="eye"><div class="pupil"></div></div>
-                    <div class="eye"><div class="pupil"></div></div>
+                    <div class="eye"><div class="pupil" id="p1"></div></div>
+                    <div class="eye"><div class="pupil" id="p2"></div></div>
                 </div>
-                <div id="weapon"></div>
             </div>
         </div>
-
         <div id="platforms"></div>
     </div>
 </div>
 
 <script>
     const world = document.getElementById('world'), haya = document.getElementById('haya');
-    const weapon = document.getElementById('weapon');
+    const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');
 
-    // Physics Constants
     let pX = 200, pY = 400, vX = 0, vY = 0;
-    let camX = 0, facing = 1, isGrounded = false;
-    const gravity = 0.8, friction = 0.85, accel = 1.4, jumpStr = -18;
-    
+    let camX = 0, facing = 1, isGrounded = false, canJump = true;
+    const gravity = 0.8, friction = 0.82, accel = 1.6, jumpStr = -19;
     const keys = {};
 
-    // Fixed Level Map (Static coordinates)
     const map = [
-        {x: 0, y: 600, w: 1000},
-        {x: 1100, y: 450, w: 400},
-        {x: 1600, y: 300, w: 400},
-        {x: 2100, y: 500, w: 1200}
+        {x: 0, y: 600, w: 1200}, {x: 1300, y: 400, w: 400},
+        {x: 1800, y: 250, w: 500}, {x: 2400, y: 500, w: 1500}
     ];
 
     map.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'platform';
-        Object.assign(div.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '500px' });
-        document.getElementById('platforms').appendChild(div);
+        const d = document.createElement('div'); d.className = 'platform';
+        Object.assign(d.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '600px' });
+        document.getElementById('platforms').appendChild(d);
     });
 
-    // Inputs
     window.onkeydown = (e) => keys[e.code] = true;
     window.onkeyup = (e) => keys[e.code] = false;
+    
+    // Smooth Attack Interaction
     window.onmousedown = () => {
+        if(haya.classList.contains('attacking')) return;
         haya.classList.add('attacking');
-        setTimeout(() => haya.classList.remove('attacking'), 250);
+        // Screen Shake on hit
+        world.style.transition = "none";
+        world.style.marginLeft = (Math.random()*10-5)+"px";
+        setTimeout(() => {
+            haya.classList.remove('attacking');
+            world.style.marginLeft = "0px";
+        }, 250);
     };
 
     function update() {
-        // Horizontal Movement
+        // Movement logic
         if (keys['KeyA'] || keys['ArrowLeft']) { vX -= accel; facing = -1; }
         if (keys['KeyD'] || keys['ArrowRight']) { vX += accel; facing = 1; }
         vX *= friction;
-
-        // Vertical Movement
         vY += gravity;
         pX += vX; pY += vY;
 
-        // --- STABLE COLLISION ---
+        // Collision logic
         isGrounded = false;
         map.forEach(p => {
-            // Check if Haya is within platform width
-            if (pX + 50 > p.x && pX < p.x + p.w) {
-                // Check if Haya is landing on the top surface
-                if (vY > 0 && pY + 60 >= p.y && pY + 60 <= p.y + 40) {
-                    pY = p.y - 60;
-                    vY = 0;
-                    isGrounded = true;
+            if (pX + 55 > p.x && pX < p.x + p.w) {
+                if (vY > 0 && pY + 60 >= p.y && pY + 60 <= p.y + 45) {
+                    pY = p.y - 60; vY = 0; isGrounded = true;
                 }
             }
         });
 
-        // Jump (Space or W)
+        // Jump logic
         if ((keys['Space'] || keys['KeyW']) && isGrounded) {
-            vY = jumpStr;
-            isGrounded = false;
-            // Squash and Stretch Jump
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scale(0.8, 1.3)`;
+            vY = jumpStr; isGrounded = false;
         }
 
-        // --- ANIMATION & JUICE ---
-        // Smooth out the scaling from jumps/landings
-        if (isGrounded) {
-            const lean = Math.min(Math.abs(vX) * 1.5, 15) * facing;
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) rotate(${lean}deg)`;
-        } else {
-            // Air tilt
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) rotate(${vY}deg)`;
+        // --- POLISHED ANIMATIONS ---
+        
+        // 1. Squash & Stretch (Physics-based)
+        let stretchY = 1, stretchX = 1;
+        if (!isGrounded) {
+            stretchY = 1 + Math.abs(vY) * 0.015; // Stretch as she falls/rises
+            stretchX = 1 - Math.abs(vY) * 0.015;
+        } else if (Math.abs(vX) > 2) {
+            stretchY = 0.9; stretchX = 1.1; // Squash slightly while running
         }
 
-        // Camera Lerp (Smoothly follow Haya)
+        // 2. Dynamic Tilting
+        const tilt = isGrounded ? (vX * 1.8) : (vY * facing * 0.5);
+        
+        haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) 
+                                scale(${stretchX * facing}, ${stretchY}) 
+                                rotate(${tilt}deg)`;
+
+        // 3. Eye Tracking (Pupils move toward velocity)
+        const eyeX = vX * 0.8;
+        const eyeY = vY * 0.5;
+        p1.style.transform = p2.style.transform = `translate(${eyeX}px, ${eyeY}px)`;
+
+        // 4. Smooth Camera Lerp
         const targetCam = -(pX - window.innerWidth / 2.5);
-        camX += (targetCam - camX) * 0.1;
+        camX += (targetCam - camX) * 0.08;
         world.style.transform = `translateX(${camX}px)`;
 
-        // Fall Safety
+        // Respawn Safety
         if (pY > 1500) { pX = 200; pY = 400; vX = 0; vY = 0; }
 
         requestAnimationFrame(update);
