@@ -12,23 +12,17 @@
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         .btn-main { padding: 18px 45px; font-size: 22px; background: linear-gradient(45deg, #ff4d6d, #ff758c); color: white; border: none; border-radius: 50px; cursor: pointer; z-index: 100; font-weight: bold; box-shadow: 0 8px 20px rgba(255, 77, 109, 0.3); }
-        
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
         #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; }
         #health-ui { position: absolute; top: 25px; right: 20px; font-size: 24px; }
-        
-        /* BIGGER ITEMS */
-        .falling-item { position: absolute; top: -100px; padding: 15px; cursor: pointer; user-select: none; z-index: 600; touch-action: none; animation: fall linear forwards; font-size: 65px; } /* Increased from 45px */
+        .falling-item { position: absolute; top: -100px; padding: 15px; cursor: pointer; user-select: none; z-index: 600; touch-action: none; animation: fall linear forwards; font-size: 65px; }
         @keyframes fall { from { top: -100px; } to { top: 110vh; } }
-        
         .star-item { font-size: 75px; filter: drop-shadow(0 0 15px gold); }
         .rose-item { font-size: 85px; filter: drop-shadow(0 0 20px #ff0040); }
         .spinner { display: inline-block; animation: spin 2s infinite linear; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
         .perfect-popup { position: absolute; color: gold; font-weight: bold; font-size: 30px; pointer-events: none; z-index: 1000; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); animation: perfectFloat 0.8s ease-out forwards; }
         @keyframes perfectFloat { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-100px) scale(1.2); opacity: 0; } }
-        
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
         .envelope { width: 150px; height: 100px; background: #fff9e6; border-radius: 5px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.6); margin-bottom: 30px; }
         .envelope::after { content: '💌'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 35px; }
@@ -42,9 +36,7 @@
     </style>
 </head>
 <body>
-    <audio id="bgMusic" loop preload="auto">
-        <source src="music.mp3.m4a" type="audio/mp4">
-    </audio>
+    <audio id="bgMusic" loop preload="auto"><source src="music.mp3.m4a" type="audio/mp4"></audio>
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
@@ -78,16 +70,15 @@
     <script>
         let audioCtx;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
-        function playSfx(freq, type, duration, vol=0.05) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
-        const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.05), star: () => { playSfx(880, 'triangle', 0.1, 0.05); setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.05), 80); }, rose: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.05), i*100)); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.03), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.08), i*120)) };
+        function playSfx(freq, type, duration, vol=0.03) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
+        const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.04), star: () => { playSfx(880, 'triangle', 0.1, 0.04); setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.04), 80); }, rose: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.04), i*100)); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.02), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120)) };
         
         let score = 0; let lives = 3; let gameActive = false; const targetScore = 150;
         
-        // BETTER FADE LOGIC
         function fadeAudio(audio, targetVol, duration) {
             const initialVol = audio.volume;
-            const stepTime = 50;
-            const steps = duration / stepTime;
+            const steps = 30;
+            const stepTime = duration / steps;
             const volStep = (targetVol - initialVol) / steps;
             let count = 0;
             const interval = setInterval(() => {
@@ -95,16 +86,17 @@
                 audio.volume = Math.max(0, Math.min(1, audio.volume + volStep));
                 if (count >= steps) {
                     clearInterval(interval);
-                    if (targetVol === 0) audio.pause();
+                    if (targetVol === 0) { audio.pause(); audio.currentTime = 0; }
                 }
             }, stepTime);
         }
 
         function initAndStart() { 
             initAudio(); 
+            score = 0; lives = 3; updateLives();
+            document.getElementById("score").innerText = "0";
             const m = document.getElementById("bgMusic"); 
-            m.volume = 0; 
-            m.play().then(() => fadeAudio(m, 0.15, 3000)); // Fade to 15% volume over 3s
+            if (m.paused) { m.volume = 0; m.play().then(() => fadeAudio(m, 0.08, 3000)); }
             sfx.pop(); 
             document.getElementById("start-screen").style.display = "none"; 
             document.getElementById("game-container").style.display = "block"; 
@@ -115,10 +107,7 @@
         function spawnLoop() { 
             if (!gameActive) return; 
             let rand = Math.random();
-            let type = "heart";
-            if (rand > 0.94) type = "rose";
-            else if (rand > 0.82) type = "star";
-            
+            let type = rand > 0.94 ? "rose" : (rand > 0.82 ? "star" : "heart");
             spawnItem(type); 
             setTimeout(spawnLoop, Math.max(250, 850 - (score * 3))); 
         }
@@ -126,10 +115,9 @@
         function spawnItem(type) { 
             const h = document.createElement("div"); 
             h.className = "falling-item";
-            if (type === "rose") { h.innerHTML = "🌹"; h.classList.add("rose-item"); }
-            else if (type === "star") { h.innerHTML = '<div class="spinner">⭐</div>'; h.classList.add("star-item"); }
-            else { h.innerHTML = "❤️"; }
-
+            h.innerHTML = type === "rose" ? "🌹" : (type === "star" ? '<div class="spinner">⭐</div>' : "❤️");
+            if (type === "rose") h.classList.add("rose-item");
+            if (type === "star") h.classList.add("star-item");
             h.style.left = Math.random() * 80 + 10 + "vw"; 
             h.style.animationDuration = (type === "heart" ? (Math.random() * 1.5 + 2.0) : 1.8) + "s"; 
             
@@ -139,47 +127,49 @@
                 if(type === "rose") { score += 15; sfx.rose(); showPopup(h.offsetLeft, h.offsetTop, "PERFECT +15", "#ff0040"); }
                 else if(type === "star") { score += 5; sfx.star(); showPopup(h.offsetLeft, h.offsetTop, "GREAT +5", "gold"); }
                 else { score += 1; sfx.pop(); }
-                
                 document.getElementById("score").innerText = Math.min(score, targetScore); 
                 h.remove(); 
                 if (score >= targetScore) endToEnvelope(); 
             }; 
-            
             h.addEventListener("touchstart", catchItem); 
             h.addEventListener("mousedown", catchItem); 
             document.getElementById("game-container").appendChild(h); 
-            
             h.addEventListener('animationend', () => { 
                 if (h.parentNode) { 
                     h.remove(); 
-                    if (type === "heart") { 
+                    if (type === "heart" && gameActive) { 
                         lives--; sfx.miss(); updateLives(); 
-                        if (lives <= 0) { location.reload(); } 
+                        if (lives <= 0) gameOver();
                     } 
                 } 
             }); 
         }
 
+        function gameOver() {
+            gameActive = false;
+            const items = document.querySelectorAll('.falling-item');
+            items.forEach(i => i.remove());
+            alert("Don't give up, Haya! Try again ❤️");
+            document.getElementById("game-container").style.display = "none";
+            document.getElementById("start-screen").style.display = "block";
+        }
+
         function showPopup(x, y, text, color) { 
             const p = document.createElement("div"); 
-            p.className = "perfect-popup"; 
-            p.innerText = text; 
+            p.className = "perfect-popup"; p.innerText = text; 
             p.style.left = x + "px"; p.style.top = y + "px"; p.style.color = color;
-            document.body.appendChild(p); 
-            setTimeout(() => p.remove(), 800); 
+            document.body.appendChild(p); setTimeout(() => p.remove(), 800); 
         }
 
         function updateLives() { let l = ""; for(let i=0; i<lives; i++) l += "❤️"; document.getElementById("health-ui").innerText = l; }
         
         function endToEnvelope() { 
-            gameActive = false; 
-            sfx.win(); 
+            gameActive = false; sfx.win(); 
             const m = document.getElementById("bgMusic");
-            fadeAudio(m, 0, 3000); // Fade out to 0 over 3s
+            fadeAudio(m, 0, 4000);
             document.getElementById("game-container").style.display = "none"; 
             const ec = document.getElementById("envelope-container"); 
-            ec.style.display = "flex"; 
-            setTimeout(() => ec.style.opacity = "1", 50); 
+            ec.style.display = "flex"; setTimeout(() => ec.style.opacity = "1", 50); 
         }
 
         function openLetterWithSound() { initAudio(); sfx.paper(); document.getElementById("envelope-container").style.display = "none"; const c = document.getElementById("message-container"); c.style.display = "block"; setTimeout(() => { c.classList.add('open'); document.getElementById("message").style.opacity = "1"; }, 100); setTimeout(() => { document.getElementById("question-area").style.opacity = "1"; document.getElementById("question-area").style.pointerEvents = "auto"; }, 5500); }
