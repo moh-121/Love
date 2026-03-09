@@ -34,11 +34,34 @@
         #game-ui { position: absolute; top: 20px; left: 20px; font-size: 18px; color: #ff4d6d; font-weight: bold; }
         #health-ui { position: absolute; top: 20px; right: 20px; font-size: 18px; letter-spacing: 3px; }
         
-        .game-heart { position: absolute; font-size: 45px; padding: 25px; cursor: pointer; user-select: none; animation: fall linear forwards; z-index: 600; touch-action: none; }
-        .power-up { font-size: 55px; filter: drop-shadow(0 0 10px gold); animation: fall linear forwards, spin 2s infinite linear; }
+        /* Fixed Falling Animation for both Hearts and Stars */
+        .game-heart { 
+            position: absolute; 
+            font-size: 45px; 
+            padding: 25px; 
+            cursor: pointer; 
+            user-select: none; 
+            animation: fall linear forwards; 
+            z-index: 600; 
+            touch-action: none; 
+        }
+
+        .power-up { 
+            font-size: 55px; 
+            filter: drop-shadow(0 0 15px gold); 
+            /* Added explicit animation here to ensure it falls */
+            animation: fall linear forwards, spin 2s infinite linear; 
+        }
         
-        @keyframes fall { to { transform: translateY(110vh); } }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fall { 
+            from { transform: translateY(-100px); }
+            to { transform: translateY(110vh); } 
+        }
+        
+        @keyframes spin { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
 
         /* Envelope & Message */
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
@@ -60,7 +83,6 @@
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s; z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
 
-        /* Background Effects */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
         .heart-float { position: absolute; pointer-events: none; animation: floatUp var(--speed) linear forwards; z-index: 200; }
@@ -129,13 +151,9 @@
 
         function spawnLoop() {
             if (!gameActive) return;
-            
-            // Randomly decide between regular heart or Golden Power-up
-            const isPowerUp = Math.random() > 0.92; 
+            const isPowerUp = Math.random() > 0.9; 
             spawnHeart(isPowerUp);
-            
-            // Speed up spawning as score increases
-            const delay = Math.max(400, 800 - (score * 20));
+            const delay = Math.max(400, 900 - (score * 15));
             setTimeout(spawnLoop, delay);
         }
 
@@ -146,8 +164,7 @@
             h.style.left = Math.random() * 80 + 10 + "vw";
             h.style.top = "-70px";
             
-            // Random speed
-            const speed = isPowerUp ? 1.5 : (Math.random() * 1.2 + 1.8);
+            const speed = isPowerUp ? 1.8 : (Math.random() * 1.5 + 2);
             h.style.animationDuration = speed + "s";
             
             const catchHeart = (e) => {
@@ -166,7 +183,7 @@
             h.addEventListener('animationend', () => {
                 if (h.parentNode) {
                     h.remove();
-                    if (!isPowerUp) { // Missing a star doesn't hurt, only missing hearts
+                    if (!isPowerUp) {
                         lives--;
                         updateLives();
                         if (lives <= 0) {
@@ -241,7 +258,6 @@
             }
         }
 
-        // --- STARS ---
         for (let i = 0; i < 60; i++) {
             const s = document.createElement("div");
             s.className = "star";
