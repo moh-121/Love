@@ -2,224 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Haya: Clinical Shadow</title>
+    <title>Haya: Sector 7 Protocol</title>
     <style>
-        :root { --cyan: #00f2ff; --red: #ff0055; --bg: #030208; --white: #f0f0f5; }
-        body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Inter', sans-serif; color: white; }
+        :root { --cyan: #00f2ff; --red: #ff0055; --bg: #030109; --panel: rgba(10, 5, 25, 0.9); }
+        * { box-sizing: border-box; cursor: crosshair; }
+        body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
 
+        /* --- THE VIEWPORT --- */
         #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #world { position: absolute; will-change: transform; }
+        
+        /* Deep Background Parallax */
+        #bg-deep { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #030109 100%); z-index: 1; }
+        .far-structure { position: absolute; bottom: 0; width: 300%; height: 300px; background: linear-gradient(0deg, #10061f 0%, transparent 100%); opacity: 0.3; clip-path: polygon(0% 100%, 10% 50%, 20% 70%, 30% 40%, 40% 60%, 50% 20%, 60% 50%, 70% 30%, 80% 60%, 90% 40%, 100% 100%); }
+        
+        #world { position: absolute; width: 100%; height: 100%; will-change: transform; z-index: 10; }
 
-        /* --- THE CHARACTER: HAYA (SQUASH & STRETCH RIG) --- */
-        #haya { 
-            position: absolute; width: 50px; height: 80px; 
-            z-index: 1000; transform-origin: bottom center;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .haya-sprite { position: relative; width: 100%; height: 100%; }
-
-        /* Floating Hair (Ori-style physics) */
-        .hair { 
-            position: absolute; top: -38px; left: 8px; width: 40px; height: 30px; 
-            background: #2a1a10; border-radius: 20px 20px 5px 15px; 
-            transition: transform 0.3s; z-index: 10;
-        }
-
-        /* The Clinical Coat (Cape-like physics) */
-        .coat { 
-            position: absolute; top: -5px; left: 5px; width: 40px; height: 60px; 
-            background: var(--white); border-radius: 10px 10px 25px 25px;
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.4);
+        /* --- REDESIGNED HAYA MODEL (Polished Rig) --- */
+        .player { position: absolute; width: 60px; height: 100px; transform-origin: bottom center; z-index: 100; transition: transform 0.1s; }
+        .visual-haya { position: relative; width: 100%; height: 100%; }
+        
+        /* Shaded Coat (AAA-Indie Detail) */
+        .body-coat { 
+            position: absolute; bottom: 10px; left: 10px; width: 40px; height: 60px; 
+            background: linear-gradient(135deg, #f0f0f5 0%, #e0e0e5 100%);
+            border-radius: 8px 8px 20px 20px; border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.4);
             transition: transform 0.2s, border-radius 0.2s;
         }
+        .coat-trim { position: absolute; bottom: -2px; left: 0; width: 100%; height: 10px; background: rgba(0,0,0,0.05); border-radius: 0 0 20px 20px; }
+        .nurse-cross { color: var(--red); position: absolute; font-size: 10px; top: 6px; right: 6px; font-weight: bold; opacity: 0.8; }
 
-        .arm { 
-            position: absolute; top: 10px; right: -8px; width: 10px; height: 35px; 
-            background: var(--white); border-radius: 5px; transform-origin: top center;
-            z-index: 15; transition: transform 0.1s;
+        /* Empty Arm (Dynamic Syringe Summon) */
+        .arm-front { 
+            position: absolute; top: 35px; right: -5px; width: 12px; height: 35px; 
+            background: #f0f0f5; border-radius: 6px; transform-origin: top center;
+            z-index: 10; box-shadow: -2px 0 5px rgba(0,0,0,0.1); transition: transform 0.1s;
         }
         
-        /* The Plasma Blade */
-        .blade { 
-            position: absolute; bottom: -40px; left: 2px; width: 6px; height: 50px; 
-            background: var(--cyan); border-radius: 3px; 
+        /* The Summond Weapon (Phases in) */
+        .syringe-blade { 
+            position: absolute; bottom: -35px; left: 2px; width: 8px; height: 45px; 
+            background: var(--cyan); border-radius: 2px;
             box-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
-            opacity: 0.8;
+            opacity: 0; transform: scaleY(0); transform-origin: top;
+            transition: opacity 0.1s, transform 0.1s;
         }
+        /* State when attacking */
+        .attacking .syringe-blade { opacity: 1; transform: scaleY(1); }
+
+        .head { position: absolute; top: 0; left: 15px; width: 34px; height: 34px; background: #ffe0bd; border-radius: 50%; border-bottom: 2px solid #d4a373; z-index: 5; }
+        .hair { position: absolute; top: -5px; left: -5px; width: 44px; height: 30px; background: #2d1b10; border-radius: 20px 20px 5px 15px; transition: transform 0.3s; }
+        .hair-highlight { position: absolute; width: 15px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 5px; top: 5px; left: 10px; transform: rotate(-5deg); }
+
+        /* Leg Structure */
+        .leg { position: absolute; width: 12px; height: 35px; background: #f0f0f5; bottom: -10px; border-bottom: 10px solid #1a1a1a; transform-origin: top center; z-index: 1; }
 
         /* --- VISUAL EFFECTS (JUICE) --- */
-        .slash-arc {
-            position: absolute; width: 120px; height: 120px; border: 6px solid var(--cyan);
-            border-radius: 50%; border-right-color: transparent; border-top-color: transparent;
-            opacity: 0; pointer-events: none; z-index: 2000;
-        }
-        .slash-active { animation: slash-glow 0.25s ease-out; }
-        @keyframes slash-glow {
-            0% { opacity: 1; transform: scale(0.6) rotate(-45deg); filter: brightness(2); }
-            100% { opacity: 0; transform: scale(1.4) rotate(120deg); filter: brightness(1); }
-        }
+        .particle { position: absolute; pointer-events: none; border-radius: 50%; background: var(--cyan); animation: fadeOut 0.6s forwards; }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-30px) scale(0); } }
 
-        .dust { 
-            position: absolute; background: rgba(255,255,255,0.2); border-radius: 50%; 
-            pointer-events: none; animation: dust-fade 0.5s forwards; 
+        .slash-fx { 
+            position: absolute; width: 150px; height: 150px; border: 5px solid var(--cyan); 
+            border-radius: 50%; border-right-color: transparent; border-top-color: transparent;
+            opacity: 0; pointer-events: none; filter: blur(1px) drop-shadow(0 0 10px var(--cyan));
+            top: -20px; right: -70px; z-index: 1000;
         }
-        @keyframes dust-fade { to { opacity: 0; transform: translateY(-20px) scale(0); } }
+        .attacking .slash-fx { animation: slashBlur 0.25s ease-out; }
+        @keyframes slashBlur { 0% { opacity: 1; transform: scale(0.6) rotate(-45deg); filter: brightness(2); } 100% { opacity: 0; transform: scale(1.4) rotate(135deg); filter: brightness(1); } }
 
         /* --- ENVIRONMENT --- */
-        .plat { 
-            position: absolute; background: linear-gradient(180deg, #160d26 0%, #05020a 100%); 
-            border-top: 2px solid rgba(0, 242, 255, 0.3); border-radius: 2px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-        }
+        .plat { position: absolute; background: linear-gradient(180deg, #1e1133 0%, #0a0515 100%); border: 2px solid #3d2266; box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,255,255,0.05); border-radius: 8px; }
+        .enemy { position: absolute; width: 50px; height: 50px; background: var(--red); border-radius: 50%; filter: blur(4px); box-shadow: 0 0 30px var(--red); }
 
-        /* --- UI --- */
-        #hud { position: fixed; top: 30px; left: 30px; letter-spacing: 5px; font-weight: 200; opacity: 0.8; }
-        .hp-box { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 10px; }
-        .hp-fill { width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+        /* --- UI & HUD --- */
+        #hud { position: fixed; top: 30px; left: 30px; z-index: 10000; }
+        .sys-log { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-bottom: 10px; }
+        .hp-outer { width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+        #hp-inner { width: 100%; height: 100%; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); transition: width 0.3s ease; }
     </style>
 </head>
 <body>
 
 <div id="stage">
-    <div id="hud">
-        HAYA // PROTOCOL
-        <div class="hp-box"><div class="hp-fill"></div></div>
+    <div id="bg-deep">
+        <div class="far-structure"></div>
     </div>
+    
+    <div id="hud">
+        <div class="sys-log">HAYA // Protocol v0.5 // Sector_7</div>
+        <div class="hp-outer"><div id="hp-inner"></div></div>
+    </div>
+
     <div id="world">
-        <div id="haya">
-            <div class="haya-sprite">
-                <div class="slash-arc" id="slash"></div>
-                <div class="hair" id="hair"></div>
-                <div class="coat" id="coat"></div>
-                <div class="arm" id="arm"><div class="blade"></div></div>
+        <div id="player" class="player idle">
+            <div class="visual-haya">
+                <div class="slash-fx"></div>
+                <div class="head">
+                    <div class="hair"><div class="hair-highlight"></div></div>
+                </div>
+                <div class="body-coat">
+                    <div class="nurse-cross">✚</div>
+                    <div class="coat-trim"></div>
+                </div>
+                <div class="arm-front" id="weapon-arm">
+                    <div class="syringe-blade"></div>
+                </div>
+                <div class="leg leg-back" style="left: 14px; z-index: 2; filter: brightness(0.7);"></div>
+                <div class="leg leg-front" style="left: 26px; z-index: 8;"></div>
             </div>
         </div>
-        <div id="elements"></div>
+        
+        <div id="platforms"></div>
+        <div id="enemies"></div>
     </div>
 </div>
 
 <script>
-    const world = document.getElementById('world'), haya = document.getElementById('haya');
-    const coat = document.getElementById('coat'), hair = document.getElementById('hair');
-    const arm = document.getElementById('arm'), slash = document.getElementById('slash');
+    const stage = document.getElementById('stage'), world = document.getElementById('world'), player = document.getElementById('player');
+    const arm = document.getElementById('weapon-arm');
+    const bgStructures = document.querySelector('.far-structure');
 
-    let pX = 300, pY = 400, vX = 0, vY = 0;
-    let camX = 0, isAttacking = false, facing = 1;
-    
-    // Pro Physics Constants
+    // --- GAME ENGINE STATE ---
+    let pX = 200, pY = 400, vX = 0, vY = 0;
+    let camX = 0, facing = 1, isAttacking = false, isGrounded = false, jumpCount = 0;
+    const input = { left: false, right: false };
+
+    // Professional Physics Configuration (Ori-style snappiness)
     const config = {
-        gravity: 0.75,
-        friction: 0.84,
         accel: 1.4,
-        jump: -16,
+        friction: 0.84,
+        maxSpeed: 8,
+        gravity: 0.8,
+        jump: -17,
         lerp: 0.1 // Camera smoothness
     };
 
-    const keys = {};
-    const map = [
-        {x: 0, y: 600, w: 1500}, {x: 1600, y: 450, w: 500}, 
-        {x: 2200, y: 300, w: 400}, {x: 2700, y: 500, w: 1200}
+    // --- GENERATE LEVEL ---
+    const plats = [
+        {x: 0, y: 150, w: 1200}, {x: 1300, y: 350, w: 600}, {x: 2000, y: 500, w: 500}, 
+        {x: 2600, y: 300, w: 800}, {x: 3600, y: 550, w: 1000}
     ];
 
-    map.forEach(p => {
+    plats.forEach(p => {
         const d = document.createElement('div'); d.className = 'plat';
-        Object.assign(d.style, { left: p.x+'px', top: p.y+'px', width: p.w+'px', height: '200px' });
-        document.getElementById('elements').appendChild(d);
+        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'40px'});
+        document.getElementById('platforms').appendChild(d);
     });
 
-    window.onkeydown = (e) => keys[e.code] = true;
-    window.onkeyup = (e) => keys[e.code] = false;
-    window.onmousedown = () => attack();
+    // --- PC INPUTS ---
+    window.addEventListener('keydown', e => {
+        if(e.code === 'KeyD' || e.code === 'ArrowRight') input.right = true;
+        if(e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = true;
+        if(e.code === 'Space' || e.code === 'KeyW') jump();
+    });
+    window.addEventListener('keyup', e => {
+        if(e.code === 'KeyD' || e.code === 'ArrowRight') input.right = false;
+        if(e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = false;
+    });
+    window.addEventListener('mousedown', () => attack());
+
+    function jump() {
+        if(jumpCount < 2) {
+            vY = config.jump;
+            jumpCount++;
+            spawnParticles(pX + 30, pY);
+            // Squash and stretch feedback
+            player.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${0.8 * facing}) scaleY(1.3)`;
+            setTimeout(() => player.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing})`, 100);
+        }
+    }
 
     function attack() {
         if(isAttacking) return;
         isAttacking = true;
         
-        // Hit-stop effect (pause the world slightly for impact)
-        document.body.style.filter = "brightness(1.5)";
-        slash.classList.add('slash-active');
-        arm.style.transform = "rotate(140deg) scale(1.3)";
-        
+        // Summons syringe, slashes, and causes visual impact
+        player.classList.add('attacking');
+        arm.style.transform = "rotate(135deg) scale(1.1)";
+        document.body.style.filter = "brightness(1.5)"; // Hit-stop flash
+
         setTimeout(() => {
-            isAttacking = false;
-            document.body.style.filter = "none";
-            slash.classList.remove('slash-active');
+            player.classList.remove('attacking');
             arm.style.transform = "rotate(0deg) scale(1)";
-        }, 200);
+            document.body.style.filter = "none";
+            isAttacking = false;
+        }, 220); // Syncs with the slash animation
     }
 
-    function createDust(x, y) {
-        for(let i=0; i<5; i++) {
-            const d = document.createElement('div'); d.className = 'dust';
-            const size = Math.random() * 10 + 5;
-            Object.assign(d.style, {
-                left: x + 'px', top: y + 'px', 
-                width: size+'px', height: size+'px'
-            });
-            world.appendChild(d);
-            setTimeout(() => d.remove(), 500);
+    function spawnParticles(x, y) {
+        for(let i=0; i<8; i++) {
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.left = x + 'px'; p.style.bottom = y + 'px';
+            p.style.width = p.style.height = Math.random()*8+'px';
+            world.appendChild(p); setTimeout(() => p.remove(), 600);
         }
     }
 
+    // --- MAIN ENGINE LOOP ---
     function update() {
-        // Movement Logic
-        if (keys['KeyA'] || keys['ArrowLeft']) { vX -= config.accel; facing = -1; }
-        if (keys['KeyD'] || keys['ArrowRight']) { vX += config.accel; facing = 1; }
+        // Physics logic
+        if(input.left) { vX -= config.accel; facing = -1; }
+        if(input.right) { vX += config.accel; facing = 1; }
         vX *= config.friction;
-        vY += config.gravity;
         
-        pX += vX; pY += vY;
+        vY += config.gravity;
+        pX += vX; pY -= vY;
 
-        // Collision & Landing Juice
-        let grounded = false;
-        map.forEach(p => {
-            if (pX + 30 > p.x && pX < p.x + p.w) {
-                if (vY > 0 && pY + 80 >= p.y && pY + 80 <= p.y + 40) {
-                    if (vY > 5) { // Hard landing juice
-                        createDust(pX + 25, pY + 80);
-                        haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scale(1.3, 0.7)`;
-                    }
-                    pY = p.y - 80; vY = 0; grounded = true;
-                }
+        // Platform Collision logic
+        isGrounded = false;
+        plats.forEach(p => {
+            if (pX + 40 > p.x && pX < p.x + p.w && vY > 0 && pY <= p.y + 40 && pY > p.y) {
+                if(vY > 10) spawnParticles(pX + 30, p.y + 40); // Hard landing FX
+                pY = p.y + 40; vY = 0; jumpCount = 0; isGrounded = true;
             }
         });
 
-        // Variable Jump (Higher if held - Hollow Knight style)
-        if ((keys['Space'] || keys['KeyW']) && grounded) {
-            vY = config.jump;
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scale(0.7, 1.4)`;
-            createDust(pX + 25, pY + 80);
-        }
+        // Facing flip + procedural movement lean
+        const lean = grounded ? Math.min(Math.abs(vX) * 1.5, 12) : 0;
+        player.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) rotate(${lean * facing}deg)`;
 
-        // --- THE "ALIVE" ANIMATION LOGIC ---
+        // --- ANIMATION BLENDING ---
+        if(Math.abs(vX) > 1 && isGrounded) player.className = 'player running';
+        else if(!isGrounded) player.className = 'player jumping';
+        else player.className = 'player idle';
+
+        // Physics-based Hair & Coat lag
+        document.querySelector('.hair').style.transform = `translateX(${-vX * 0.4}px) rotate(${-vX * 0.8}deg)`;
+        document.querySelector('.body-coat').style.transform = `skewX(${-vX * 1.2}deg)`;
+
+        // --- SMOOTH CAMERA & PARALLAX ---
+        const targetCamX = -(pX - window.innerWidth / 2.5);
+        camX += (targetCamX - camX) * config.lerp;
         
-        // 1. Squash and Stretch (Dynamic scaling)
-        if (!grounded) {
-            let stretch = 1 + Math.abs(vY) * 0.02;
-            let squash = 1 - Math.abs(vY) * 0.02;
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${squash * facing}) scaleY(${stretch})`;
-        } else if (Math.abs(vX) < 1) {
-            // Idle breathing
-            const breath = 1 + Math.sin(Date.now() * 0.005) * 0.02;
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) scaleY(${breath})`;
-        } else {
-            // Running lean
-            const lean = Math.min(Math.abs(vX) * 2, 15);
-            haya.style.transform = `translate3d(${pX}px, ${pY}px, 0) scaleX(${facing}) rotate(${lean * facing}deg)`;
-        }
-
-        // 2. Physics-based Hair & Coat
-        hair.style.transform = `translateX(${-vX * 0.5}px) rotate(${-vX}deg)`;
-        coat.style.transform = `skewX(${-vX * 1.5}deg)`;
-
-        // 3. Smooth Camera
-        const targetCam = -(pX - window.innerWidth / 2.5);
-        camX += (targetCam - camX) * config.lerp;
         world.style.transform = `translateX(${camX}px)`;
+        // Far parallax layer moves slower
+        bgStructures.style.transform = `translateX(${camX * 0.4}px)`;
 
-        // Fall Safety
-        if (pY > 1500) { pX = 300; pY = 400; vX = 0; vY = 0; }
+        player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
+
+        // Respawn Safety
+        if(pY < -200) { pX = 200; pY = 400; vX = 0; vY = 0; }
 
         requestAnimationFrame(update);
     }
