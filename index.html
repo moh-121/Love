@@ -23,7 +23,7 @@
             touch-action: manipulation;
         }
 
-        /* Start Screen */
+        /* UI Elements */
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; padding: 0 15px; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
@@ -35,21 +35,12 @@
         #health-ui { position: absolute; top: 20px; right: 20px; font-size: 18px; letter-spacing: 3px; }
         
         .falling-item { 
-            position: absolute; 
-            top: -100px; 
-            padding: 25px; 
-            cursor: pointer; 
-            user-select: none; 
-            z-index: 600; 
-            touch-action: none;
-            animation-name: fall;
-            animation-timing-function: linear;
-            animation-fill-mode: forwards;
+            position: absolute; top: -100px; padding: 25px; cursor: pointer; 
+            user-select: none; z-index: 600; touch-action: none;
+            animation-name: fall; animation-timing-function: linear; animation-fill-mode: forwards;
         }
-
         .heart-item { font-size: 45px; }
         .power-up-item { font-size: 55px; filter: drop-shadow(0 0 15px gold); }
-
         .spinner { display: inline-block; animation: spin 2s infinite linear; }
         
         @keyframes fall { from { top: -100px; } to { top: 110vh; } }
@@ -70,7 +61,6 @@
         #message-container.open { display: block; transform: scaleY(1) rotate(-0.5deg); opacity: 1; }
         #message { font-family: 'Caveat', cursive; font-size: 21px; line-height: 1.4; text-align: left; opacity: 0; transition: opacity 0.8s ease-in 1s; margin: 0; }
 
-        #question-area { opacity: 0; transition: opacity 1s ease-in; margin-top: 25px; pointer-events: none; }
         .yes-btn { background: #4caf50; padding: 12px 35px; border-radius: 50px; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; }
         .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; transition: 0.3s; z-index: 999; cursor: pointer; }
         .button-wrapper { position: relative; height: 80px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 15px; }
@@ -104,7 +94,7 @@
     <div id="message-container">
         <p id="message">With every passing day, my love for you grows even stronger. Every time I hear your voice, I fall a little deeper, like you’ve become a part of me a part I never want to let go. I feel so lucky to call you mine, and I truly treasure every moment you spend with me. I’m so proud of the amazing, brave girl you’ve become. I truly love you with all my heart, and I always wish you the very best.<br><br>Show those nurses that my nurse is the absolute best there is!<br><br>—M</p>
         
-        <div id="question-area">
+        <div id="question-area" style="opacity:0; pointer-events:none; margin-top:25px;">
             <p style="font-size: 19px; font-weight: bold; color: #ff4d6d; font-family: sans-serif; margin: 0;">💍 Will you stay with me forever?</p>
             <div class="button-wrapper">
                 <button id="yesBtn" class="yes-btn" onclick="sayYes()">Yes!</button>
@@ -114,6 +104,33 @@
     </div>
 
     <script>
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(freq, type, duration, vol=0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sfx = {
+            pop: () => playSound(600, 'sine', 0.1),
+            star: () => { playSound(800, 'triangle', 0.2); setTimeout(()=>playSound(1200, 'triangle', 0.2), 100); },
+            miss: () => playSound(150, 'sawtooth', 0.3, 0.05),
+            win: () => {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, i) => setTimeout(() => playSound(n, 'sine', 0.4), i * 150));
+            }
+        };
+
+        // --- TIMER ---
         const startDate = new Date("2025-12-15T00:00:00").getTime();
         function updateCounter() {
             const now = new Date().getTime();
@@ -127,12 +144,14 @@
         setInterval(updateCounter, 1000);
         updateCounter();
 
+        // --- GAME LOGIC ---
         let score = 0;
         let lives = 3;
         let gameActive = false;
         const targetScore = 50;
 
         function startGame() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             document.getElementById("start-screen").style.display = "none";
             document.getElementById("game-container").style.display = "block";
             gameActive = true;
@@ -141,25 +160,24 @@
 
         function spawnLoop() {
             if (!gameActive) return;
-            const isPowerUp = Math.random() > 0.82; // Slightly more stars to help reach 50
+            const isPowerUp = Math.random() > 0.85; 
             spawnItem(isPowerUp);
-            // Dynamic delay that gets faster as score increases
-            const delay = Math.max(300, 850 - (score * 10)); 
+            const delay = Math.max(300, 900 - (score * 12)); 
             setTimeout(spawnLoop, delay);
         }
 
         function spawnItem(isPowerUp) {
             const h = document.createElement("div");
             h.className = "falling-item " + (isPowerUp ? "power-up-item" : "heart-item");
-            if(isPowerUp) { h.innerHTML = '<div class="spinner">⭐</div>'; } else { h.innerHTML = "❤️"; }
+            h.innerHTML = isPowerUp ? '<div class="spinner">⭐</div>' : "❤️";
             h.style.left = Math.random() * 80 + 10 + "vw";
-            const speed = isPowerUp ? 1.6 : (Math.random() * 1.2 + 1.8);
-            h.style.animationDuration = speed + "s";
+            h.style.animationDuration = (isPowerUp ? 1.6 : (Math.random() * 1.2 + 2)) + "s";
             
             const catchItem = (e) => {
                 if (!gameActive) return;
                 e.preventDefault();
-                score += isPowerUp ? 5 : 1;
+                if(isPowerUp) { score += 5; sfx.star(); } 
+                else { score += 1; sfx.pop(); }
                 document.getElementById("score").innerText = Math.min(score, targetScore);
                 h.remove();
                 if (score >= targetScore) endToEnvelope();
@@ -174,6 +192,7 @@
                     h.remove();
                     if (!isPowerUp) {
                         lives--;
+                        sfx.miss();
                         updateLives();
                         if (lives <= 0) {
                             alert("Oh no! Try again for Haya ❤️");
@@ -192,6 +211,7 @@
 
         function endToEnvelope() {
             gameActive = false;
+            sfx.win();
             document.getElementById("game-container").style.display = "none";
             const ec = document.getElementById("envelope-container");
             ec.style.display = "flex";
@@ -199,6 +219,7 @@
         }
 
         function openLetter() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             document.getElementById("envelope-container").style.display = "none";
             const container = document.getElementById("message-container");
             container.style.display = "block";
@@ -226,6 +247,7 @@
         noBtn.addEventListener("mouseover", moveNo);
 
         function sayYes() {
+            sfx.win();
             document.getElementById("message-container").style.background = "none";
             document.getElementById("message-container").style.boxShadow = "none";
             document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>hehe! I knew it! <br> Love you forever baby 🤏 ❤️</h2>";
