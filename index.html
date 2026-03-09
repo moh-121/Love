@@ -35,19 +35,17 @@
     </style>
 </head>
 <body>
-    <audio id="bgMusic" loop>
-        <source src="music.mp3.m4a" type="audio/mp4">
-    </audio>
+    <audio id="bgMusic" loop><source src="music.mp3.m4a" type="audio/mp4"></audio>
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
-        <p class="sub-text">Collect 50 love points to unlock the letter</p>
+        <p class="sub-text">Collect 150 love points to unlock the letter</p>
         <div id="counter">Loading...</div>
         <button class="btn-main" onclick="initAndStart()">Start Challenge</button>
     </div>
 
     <div id="game-container">
-        <div id="game-ui">LOVE COLLECTED: <span id="score">0</span> / 50</div>
+        <div id="game-ui">LOVE COLLECTED: <span id="score">0</span> / 150</div>
         <div id="health-ui">❤️❤️❤️</div>
     </div>
 
@@ -73,13 +71,53 @@
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSfx(freq, type, duration, vol=0.1) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
         const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.1), star: () => { playSfx(880, 'triangle', 0.1); setTimeout(()=>playSfx(1100, 'triangle', 0.15), 80); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.05), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.08), i*120)) };
-        let score = 0; let lives = 3; let gameActive = false; const targetScore = 50;
-        function initAndStart() { initAudio(); const m = document.getElementById("bgMusic"); m.volume = 0.4; m.play().catch(e => console.log("Play error", e)); sfx.pop(); document.getElementById("start-screen").style.display = "none"; document.getElementById("game-container").style.display = "block"; gameActive = true; spawnLoop(); }
-        function spawnLoop() { if (!gameActive) return; spawnItem(Math.random() > 0.82); setTimeout(spawnLoop, Math.max(280, 850 - (score * 12))); }
-        function spawnItem(isP) { const h = document.createElement("div"); h.className = "falling-item " + (isP ? "power-up-item" : ""); h.innerHTML = isP ? '<div class="spinner">⭐</div>' : "❤️"; h.style.left = Math.random() * 80 + 10 + "vw"; h.style.animationDuration = (isP ? 1.5 : (Math.random() * 1.4 + 1.8)) + "s"; const catchItem = (e) => { e.preventDefault(); if(isP) { score += 5; sfx.star(); showPerfectEffect(h.offsetLeft, h.offsetTop); } else { score += 1; sfx.pop(); } document.getElementById("score").innerText = Math.min(score, targetScore); h.remove(); if (score >= targetScore) endToEnvelope(); }; h.addEventListener("touchstart", catchItem); h.addEventListener("mousedown", catchItem); document.getElementById("game-container").appendChild(h); h.addEventListener('animationend', () => { if (h.parentNode) { h.remove(); if (!isP) { lives--; sfx.miss(); updateLives(); if (lives <= 0) { alert("Try again for Haya! ❤️"); location.reload(); } } } }); }
+        
+        let score = 0; let lives = 3; let gameActive = false; const targetScore = 150;
+        
+        function fadeAudio(audio, startVol, endVol, duration) {
+            const steps = 20;
+            const interval = duration / steps;
+            const volStep = (endVol - startVol) / steps;
+            let currentStep = 0;
+            const timer = setInterval(() => {
+                currentStep++;
+                audio.volume = Math.max(0, Math.min(0.3, startVol + (volStep * currentStep)));
+                if (currentStep >= steps) {
+                    clearInterval(timer);
+                    if (endVol === 0) audio.pause();
+                }
+            }, interval);
+        }
+
+        function initAndStart() { 
+            initAudio(); 
+            const m = document.getElementById("bgMusic"); 
+            m.volume = 0; 
+            m.play(); 
+            fadeAudio(m, 0, 0.25, 2000); // Fades in to 25% over 2 seconds
+            sfx.pop(); 
+            document.getElementById("start-screen").style.display = "none"; 
+            document.getElementById("game-container").style.display = "block"; 
+            gameActive = true; 
+            spawnLoop(); 
+        }
+
+        function spawnLoop() { if (!gameActive) return; spawnItem(Math.random() > 0.85); setTimeout(spawnLoop, Math.max(250, 800 - (score * 4))); }
+        function spawnItem(isP) { const h = document.createElement("div"); h.className = "falling-item " + (isP ? "power-up-item" : ""); h.innerHTML = isP ? '<div class="spinner">⭐</div>' : "❤️"; h.style.left = Math.random() * 80 + 10 + "vw"; h.style.animationDuration = (isP ? 1.5 : (Math.random() * 1.4 + 1.8)) + "s"; const catchItem = (e) => { e.preventDefault(); if(isP) { score += 5; sfx.star(); showPerfectEffect(h.offsetLeft, h.offsetTop); } else { score += 1; sfx.pop(); } document.getElementById("score").innerText = Math.min(score, targetScore); h.remove(); if (score >= targetScore) endToEnvelope(); }; h.addEventListener("touchstart", catchItem); h.addEventListener("mousedown", catchItem); document.getElementById("game-container").appendChild(h); h.addEventListener('animationend', () => { if (h.parentNode) { h.remove(); if (!isP) { lives--; sfx.miss(); updateLives(); if (lives <= 0) { location.reload(); } } } }); }
         function showPerfectEffect(x, y) { const p = document.createElement("div"); p.className = "perfect-popup"; p.innerText = "PERFECT +5"; p.style.left = x + "px"; p.style.top = y + "px"; document.body.appendChild(p); setTimeout(() => p.remove(), 800); }
         function updateLives() { let l = ""; for(let i=0; i<lives; i++) l += "❤️"; document.getElementById("health-ui").innerText = l; }
-        function endToEnvelope() { gameActive = false; sfx.win(); document.getElementById("bgMusic").pause(); document.getElementById("game-container").style.display = "none"; const ec = document.getElementById("envelope-container"); ec.style.display = "flex"; setTimeout(() => ec.style.opacity = "1", 50); }
+        
+        function endToEnvelope() { 
+            gameActive = false; 
+            sfx.win(); 
+            const m = document.getElementById("bgMusic");
+            fadeAudio(m, m.volume, 0, 2500); // Fades out over 2.5 seconds
+            document.getElementById("game-container").style.display = "none"; 
+            const ec = document.getElementById("envelope-container"); 
+            ec.style.display = "flex"; 
+            setTimeout(() => ec.style.opacity = "1", 50); 
+        }
+
         function openLetterWithSound() { initAudio(); sfx.paper(); document.getElementById("envelope-container").style.display = "none"; const c = document.getElementById("message-container"); c.style.display = "block"; setTimeout(() => { c.classList.add('open'); document.getElementById("message").style.opacity = "1"; }, 100); setTimeout(() => { const qa = document.getElementById("question-area"); qa.style.opacity = "1"; qa.style.pointerEvents = "auto"; }, 5500); }
         const startDate = new Date("2025-12-15T00:00:00").getTime();
         function updateCounter() { const now = new Date().getTime(); const diff = now - startDate; const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); document.getElementById("counter").innerHTML = d + "d : " + h + "h : " + m + "m : " + s + "s"; }
