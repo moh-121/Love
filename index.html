@@ -25,11 +25,12 @@
             box-shadow: 0 8px 20px rgba(255, 77, 109, 0.3);
         }
 
-        /* Game Elements */
+        /* Game UI */
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
         #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; letter-spacing: 1px; }
         #health-ui { position: absolute; top: 25px; right: 20px; font-size: 20px; }
         
+        /* Falling Items */
         .falling-item { 
             position: absolute; top: -100px; padding: 25px; cursor: pointer; 
             user-select: none; z-index: 600; touch-action: none;
@@ -40,6 +41,18 @@
         .power-up-item { font-size: 55px; filter: drop-shadow(0 0 15px gold); }
         .spinner { display: inline-block; animation: spin 2s infinite linear; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Perfect Animation */
+        .perfect-popup {
+            position: absolute; color: gold; font-weight: bold; font-size: 24px;
+            pointer-events: none; z-index: 1000; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            animation: perfectFloat 0.8s ease-out forwards;
+        }
+        @keyframes perfectFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            50% { transform: translateY(-40px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; }
+        }
 
         /* Envelope & Message */
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
@@ -98,66 +111,42 @@
     <script>
         // --- AUDIO ENGINE ---
         let audioCtx;
-
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playSfx(freq, type, duration, vol=0.1) {
-            if (!audioCtx || audioCtx.state !== 'running') return;
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
         const sfx = {
-            pop: () => playSfx(600, 'sine', 0.1, 0.12),
+            pop: () => playSfx(600, 'sine', 0.1, 0.1),
             star: () => { 
-                playSfx(880, 'triangle', 0.1, 0.1); 
-                setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.08), 80); 
+                playSfx(880, 'triangle', 0.1); 
+                setTimeout(()=>playSfx(1100, 'triangle', 0.15), 80); 
             },
-            miss: () => playSfx(180, 'sawtooth', 0.2, 0.06),
+            miss: () => playSfx(150, 'sawtooth', 0.2, 0.05),
             paper: () => {
-                for(let i=0; i<12; i++) {
-                    setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.015), i*35);
-                }
+                for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35);
             },
-            win: () => {
-                [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.08), i*120));
-            }
+            win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.08), i*120))
         };
 
         // --- GAME LOGIC ---
         let score = 0; let lives = 3; let gameActive = false; const targetScore = 50;
 
         function initAndStart() {
-            initAudio(); 
-            // Small silent oscillator to "unlock" the audio on mobile
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioCtx.destination);
-            source.start(0);
-            
-            setTimeout(() => {
-                sfx.pop();
-                startGame();
-            }, 50);
-        }
-
-        function startGame() {
+            initAudio();
+            sfx.pop();
             document.getElementById("start-screen").style.display = "none";
             document.getElementById("game-container").style.display = "block";
             gameActive = true;
@@ -182,7 +171,10 @@
             const catchItem = (e) => {
                 if (!gameActive) return;
                 e.preventDefault();
-                if(isPowerUp) { score += 5; sfx.star(); } 
+                if(isPowerUp) { 
+                    score += 5; sfx.star(); 
+                    showPerfectEffect(h.offsetLeft, h.offsetTop);
+                } 
                 else { score += 1; sfx.pop(); }
                 document.getElementById("score").innerText = Math.min(score, targetScore);
                 h.remove();
@@ -204,6 +196,16 @@
             });
         }
 
+        function showPerfectEffect(x, y) {
+            const p = document.createElement("div");
+            p.className = "perfect-popup";
+            p.innerText = "PERFECT +5";
+            p.style.left = x + "px";
+            p.style.top = y + "px";
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 800);
+        }
+
         function updateLives() {
             let lText = ""; for(let i=0; i<lives; i++) lText += "❤️";
             document.getElementById("health-ui").innerText = lText;
@@ -218,7 +220,7 @@
         }
 
         function openLetterWithSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            initAudio();
             sfx.paper();
             document.getElementById("envelope-container").style.display = "none";
             const container = document.getElementById("message-container");
@@ -233,7 +235,7 @@
             }, 5500);
         }
 
-        // Timer Logic
+        // Timer
         const startDate = new Date("2025-12-15T00:00:00").getTime();
         function updateCounter() {
             const now = new Date().getTime();
@@ -259,10 +261,10 @@
 
         function sayYes() {
             sfx.win();
-            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px; font-family: sans-serif;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>";
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>";
         }
 
-        // Stars Background
+        // Background Stars
         for (let i = 0; i < 50; i++) {
             const s = document.createElement("div");
             s.className = "star-bg";
