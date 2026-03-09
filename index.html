@@ -36,7 +36,6 @@
     </style>
 </head>
 <body>
-    <audio id="bgMusic" loop preload="auto"><source src="music.mp3.m4a" type="audio/mp4"></audio>
 
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
@@ -70,33 +69,14 @@
     <script>
         let audioCtx;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
-        function playSfx(freq, type, duration, vol=0.03) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
-        const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.04), star: () => { playSfx(880, 'triangle', 0.1, 0.04); setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.04), 80); }, rose: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.04), i*100)); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.02), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120)) };
+        function playSfx(freq, type, duration, vol=0.05) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
+        const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.05), star: () => { playSfx(880, 'triangle', 0.1, 0.05); setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.05), 80); }, rose: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.05), i*100)); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.03), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120)) };
         
         let score = 0; let lives = 3; let gameActive = false; const targetScore = 150;
         
-        function fadeAudio(audio, targetVol, duration) {
-            const initialVol = audio.volume;
-            const steps = 30;
-            const stepTime = duration / steps;
-            const volStep = (targetVol - initialVol) / steps;
-            let count = 0;
-            const interval = setInterval(() => {
-                count++;
-                audio.volume = Math.max(0, Math.min(1, audio.volume + volStep));
-                if (count >= steps) {
-                    clearInterval(interval);
-                    if (targetVol === 0) { audio.pause(); audio.currentTime = 0; }
-                }
-            }, stepTime);
-        }
-
         function initAndStart() { 
-            initAudio(); 
-            score = 0; lives = 3; updateLives();
+            initAudio(); score = 0; lives = 3; updateLives();
             document.getElementById("score").innerText = "0";
-            const m = document.getElementById("bgMusic"); 
-            if (m.paused) { m.volume = 0; m.play().then(() => fadeAudio(m, 0.08, 3000)); }
             sfx.pop(); 
             document.getElementById("start-screen").style.display = "none"; 
             document.getElementById("game-container").style.display = "block"; 
@@ -147,8 +127,7 @@
 
         function gameOver() {
             gameActive = false;
-            const items = document.querySelectorAll('.falling-item');
-            items.forEach(i => i.remove());
+            document.querySelectorAll('.falling-item').forEach(i => i.remove());
             alert("Don't give up, Haya! Try again ❤️");
             document.getElementById("game-container").style.display = "none";
             document.getElementById("start-screen").style.display = "block";
@@ -165,8 +144,6 @@
         
         function endToEnvelope() { 
             gameActive = false; sfx.win(); 
-            const m = document.getElementById("bgMusic");
-            fadeAudio(m, 0, 4000);
             document.getElementById("game-container").style.display = "none"; 
             const ec = document.getElementById("envelope-container"); 
             ec.style.display = "flex"; setTimeout(() => ec.style.opacity = "1", 50); 
