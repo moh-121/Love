@@ -3,227 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Nurse Haya ❤️</title>
+    <title>Haya: Pixel Protocol</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; height: 100vh; color: #fff; }
+        body { margin: 0; background: #050010; overflow: hidden; font-family: 'Courier New', monospace; }
+        #game { position: relative; width: 100vw; height: 100vh; }
+        canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; }
         
-        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #000; }
-        
-        /* BACKGROUND - Faraway Pixel Stars */
-        #bg-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5; }
+        /* HUD */
+        #ui { position: fixed; top: 20px; left: 20px; color: #fff; z-index: 10; pointer-events: none; }
+        .bar { width: 120px; height: 12px; border: 2px solid #fff; background: #222; margin-top: 5px; }
+        #dash-fill { width: 100%; height: 100%; background: #00ffff; box-shadow: 0 0 10px #00ffff; }
 
-        #world { position: absolute; width: 5000px; height: 100%; will-change: transform; z-index: 10; }
-
-        /* HUD - Pixel Style */
-        #hud { position: fixed; top: 20px; left: 20px; z-index: 1000; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        .heart-row { display: flex; gap: 8px; margin-bottom: 5px; color: #ff3366; text-shadow: 2px 2px 0 #000; }
-        .dash-outer { width: 100px; height: 10px; background: #333; border: 2px solid #fff; }
-        #dash-bar { width: 100%; height: 100%; background: #00ffff; transition: width 0.1s; }
-
-        /* --- PIXEL HAYA SPRITE SYSTEM --- */
-        .char { position: absolute; width: 40px; height: 60px; will-change: transform, left, bottom; display: flex; align-items: flex-end; justify-content: center; z-index: 100; transform-origin: bottom center; image-rendering: pixelated; }
-        
-        #haya-visual { position: relative; width: 32px; height: 56px; transform-origin: bottom center; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        /* Pixel Body Parts */
-        .head { position: absolute; width: 20px; height: 20px; background: #ffdbac; top: 0; left: 6px; z-index: 10; border: 2px solid #e0ac69; }
-        .hair { position: absolute; width: 24px; height: 14px; background: #3d2b1f; top: -2px; left: -2px; z-index: 11; border-radius: 4px; }
-        .cap { position: absolute; width: 12px; height: 6px; background: #fff; top: -6px; left: 10px; z-index: 12; border: 2px solid #ddd; }
-        .cap::after { content: '+'; color: #ff3366; position: absolute; top: -4px; left: 3px; font-size: 8px; font-weight: bold; }
-        .eye { position: absolute; width: 4px; height: 4px; background: #000; top: 8px; right: 4px; z-index: 13; }
-
-        .torso { position: absolute; width: 24px; height: 28px; background: #fff; top: 18px; left: 4px; z-index: 5; border: 2px solid #eee; border-radius: 4px; }
-        .nurse-cross { color: #ff3366; position: absolute; font-size: 14px; top: 8px; right: 3px; font-weight: 900; }
-
-        /* Limb Layering (Pixel) */
-        .arm { position: absolute; width: 6px; height: 22px; background: #fff; top: 20px; border-bottom: 4px solid #ffdbac; border-radius: 2px; }
-        .arm-back { left: 2px; z-index: 2; filter: brightness(0.7); }
-        .arm-front { left: 12px; z-index: 8; }
-        /* The Syringe Sword */
-        .arm-front::after { content: ''; position: absolute; width: 4px; height: 26px; background: cyan; bottom: -18px; left: 1px; border: 1px solid #fff; box-shadow: 0 0 5px cyan; }
-
-        .leg { position: absolute; width: 8px; height: 16px; background: #fff; top: 44px; border-bottom: 6px solid #1a1a1a; }
-        .leg-back { left: 8px; z-index: 2; filter: brightness(0.6); }
-        .leg-front { left: 18px; z-index: 8; }
-
-        /* PIXEL ANIMATIONS */
-        .walking .leg-back { animation: pixelWalk 0.25s infinite alternate linear; }
-        .walking .leg-front { animation: pixelWalk 0.25s infinite alternate-reverse linear; }
-        .walking .arm-back { animation: pixelWalk 0.25s infinite alternate-reverse linear; }
-        .walking .arm-front { animation: pixelWalk 0.25s infinite alternate linear; }
-
-        @keyframes pixelWalk { from { transform: rotate(-30deg); } to { transform: rotate(30deg); } }
-
-        .jump-style { transform: translateY(-5px) scale(0.9, 1.2); }
-        .land-style { transform: scale(1.3, 0.7) !important; }
-        .dash-style { transform: scale(1.6, 0.4) !important; }
-
-        /* Pixel Slash */
-        #slash-arc {
-            position: absolute; width: 100px; height: 100px;
-            border: 10px solid transparent; border-right-color: cyan;
-            border-radius: 50%; top: -10px; right: -70px;
-            opacity: 0; pointer-events: none; filter: drop-shadow(0 0 5px cyan);
-        }
-        .active-slash { animation: slash Anime 0.2s linear forwards; }
-        @keyframes slash Anime { 0% { opacity: 1; transform: rotate(-100deg) scale(0.5); } 100% { opacity: 0; transform: rotate(80deg) scale(1.4); } }
-
-        /* JUMP FX */
-        .pixel-cloud { position: absolute; width: 30px; height: 10px; background: #fff; animation: cloudFade 0.4s linear forwards; }
-        @keyframes cloudFade { 0% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
-
-        /* WORLD - Pixel Style */
-        .platform { position: absolute; background: #ff3366; border: 4px solid #fff; z-index: 20; }
-        .spike { position: absolute; width: 32px; height: 24px; background: #777; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); z-index: 25; }
-
-        /* CONTROLS - Minimalist */
-        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 2000; }
-        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 10px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; }
-        .atk-btn { background: cyan; color: #000; border: none; font-size: 35px; width: 85px; height: 85px; box-shadow: 0 0 10px cyan; }
-        .jump-btn { background: #ff3366; border: none; }
+        /* Mobile Controls */
+        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 20; }
+        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 3px solid #fff; color: #fff; 
+               display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; border-radius: 8px; }
+        .atk { background: #00ffff; color: #000; border: none; width: 85px; height: 85px; }
+        .jmp { background: #ff0055; border: none; }
     </style>
 </head>
 <body>
 
-<canvas id="bg-stars"></canvas>
-<div id="game-container">
-    <div id="hud">
-        <div class="heart-row" id="hearts"> ❤️ ❤️ ❤️ </div>
-        <div class="dash-outer"><div id="dash-bar"></div></div>
-    </div>
+<div id="ui">
+    <div>HAYA_UNIT_01</div>
+    <div class="bar"><div id="dash-fill"></div></div>
+</div>
 
-    <div id="world">
-        <div id="player" class="char">
-            <div id="haya-visual">
-                <div class="cap"></div>
-                <div class="arm arm-back"></div>
-                <div class="leg leg-back"></div>
-                <div class="torso"><div class="nurse-cross">✚</div></div>
-                <div class="head">
-                    <div class="hair"></div>
-                    <div class="eye"></div>
-                </div>
-                <div class="leg leg-front"></div>
-                <div class="arm arm-front"></div>
-                <div id="slash-arc"></div>
-            </div>
-        </div>
-        <div id="platforms-layer"></div>
-        <div id="spikes-layer"></div>
-    </div>
-
-    <div id="controls">
-        <div style="display:flex; gap:12px;"><div class="btn" id="lBtn">⬅️</div><div class="btn" id="rBtn">➡️</div></div>
-        <div style="display:flex; gap:12px; align-items: flex-end;">
-            <div class="btn atk-btn" id="aBtn">💉</div>
-            <div class="btn" id="dBtn" style="background:cyan; border:none; color:#000;">⚡</div>
-            <div class="btn jump-btn" id="jBtn">UP</div>
-        </div>
+<div id="controls">
+    <div style="display:flex; gap:15px;"><div class="btn" id="lBtn">◀</div><div class="btn" id="rBtn">▶</div></div>
+    <div style="display:flex; gap:15px; align-items: flex-end;">
+        <div class="btn atk" id="aBtn">💉</div>
+        <div class="btn jmp" id="jBtn">JMP</div>
     </div>
 </div>
 
+<canvas id="screen"></canvas>
+
 <script>
-    const world = document.getElementById('world'), player = document.getElementById('player');
-    const visual = document.getElementById('haya-visual'), slash = document.getElementById('slash-arc');
-    const dashBar = document.getElementById('dash-bar');
+/** * PIXEL ART ENGINE 
+ * We define the character as a grid of color codes 
+ */
+const Colors = {
+    t: 'transparent',
+    s: '#ffdbac', // skin
+    h: '#3d2b1f', // hair
+    w: '#ffffff', // white (nurse outfit)
+    r: '#ff0055', // red (cross)
+    b: '#000000', // black (eyes/shoes)
+    c: '#00ffff'  // cyan (syringe/energy)
+};
 
-    let pX = 150, pY = 400, vX = 0, vY = 0;
-    let jumpCount = 0, isDashing = false, dashReady = true;
-    const config = { gravity: 1.0, jump: -22, speed: 7.0, friction: 0.8, dashPower: 25 };
+// 16x16 Sprite Map for Haya (Sideways Profile)
+const hayaSprite = [
+    "ttttthhhhttttttt",
+    "tttthhhhhhhttttt",
+    "ttthhwwwwwhhtttt", // w is the white cap
+    "ttthwwrrrwwhtttt",
+    "ttthhhhhhhhhtttt",
+    "ttthssssssshhttt",
+    "ttthsssssssbhttt", // b is the eye
+    "tttssssssssstttt",
+    "ttwwwwwwwwwwtttt",
+    "ttwwwwrwwwwwtttt", // r is the cross
+    "ttwwwwwwwwwwtttt",
+    "ttwwwwwwwwwwtttt",
+    "tttwwwww wwwtttt",
+    "tttw wwww  wwttt",
+    "tttbb bbb  bbbtt",
+    "tttbb bbb  bbbtt"
+];
 
-    const platforms = [{x:0, y:120, w:800}, {x:900, y:280, w:400}, {x:1400, y:450, w:300}, {x:1800, y:250, w:600}, {x:2600, y:450, w:1000}];
-    const spikes = [{x:1600, y:250}, {x:2100, y:250}];
+const canvas = document.getElementById('screen');
+const ctx = canvas.getContext('2d');
+const dashFill = document.getElementById('dash-fill');
 
-    platforms.forEach(p => {
-        const d = document.createElement('div'); d.className = 'platform';
-        Object.assign(d.style, {left:p.x+'px', bottom:p.y+'px', width:p.w+'px', height:'32px'});
-        document.getElementById('platforms-layer').appendChild(d);
-    });
-    spikes.forEach(s => {
-        const d = document.createElement('div'); d.className = 'spike';
-        Object.assign(d.style, {left:s.x+'px', bottom:(s.y+28)+'px'});
-        document.getElementById('spikes-layer').appendChild(d);
-    });
+let width, height, scale;
+let pX = 100, pY = 200, vX = 0, vY = 0;
+let facing = 1, jumpCount = 0, isDashing = false, dashTimer = 0;
+const keys = { l: false, r: false };
 
-    const keys = { l: false, r: false };
-    const setup = (id, s, e) => {
-        const el = document.getElementById(id);
-        el.addEventListener('touchstart', (ev) => { ev.preventDefault(); s(); });
-        if(e) el.addEventListener('touchend', (ev) => { ev.preventDefault(); e(); });
-    };
+const platforms = [
+    {x: 0, y: 500, w: 800}, {x: 900, y: 350, w: 400}, {x: 1400, y: 200, w: 500}, {x: 2000, y: 400, w: 800}
+];
 
-    setup('lBtn', () => keys.l = true, () => keys.l = false);
-    setup('rBtn', () => keys.r = true, () => keys.r = false);
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    scale = 4; // Each "pixel" in the art is 4x4 on screen
+}
+
+function drawPixelSprite(x, y, sprite, flip, stretchX=1, stretchY=1) {
+    ctx.save();
+    ctx.translate(x, y);
+    if(flip === -1) ctx.scale(-1, 1);
     
-    setup('jBtn', () => { 
-        if(jumpCount < 2) { 
-            vY = config.jump; if(jumpCount===1) spawnCloud(pX, pY);
-            jumpCount++; visual.className = "jump-style";
-        } 
-    });
-
-    setup('aBtn', () => {
-        slash.classList.add('active-slash');
-        setTimeout(() => slash.classList.remove('active-slash'), 200);
-    });
-
-    setup('dBtn', () => {
-        if(dashReady) {
-            isDashing = true; dashReady = false;
-            vX = (player.style.transform.includes('-1') ? -1 : 1) * config.dashPower;
-            vY = 0; visual.className = "dash-style";
-            dashBar.style.width = "0%";
-            setTimeout(() => { isDashing = false; visual.className = ""; }, 250);
-            setTimeout(() => { dashReady = true; dashBar.style.width = "100%"; }, 1000);
-        }
-    });
-
-    function spawnCloud(x, y) {
-        const c = document.createElement('div'); c.className = 'pixel-cloud';
-        c.style.left = (x + 5) + 'px'; c.style.bottom = y + 'px';
-        world.appendChild(c); setTimeout(() => c.remove(), 400);
-    }
-
-    function update() {
-        if(!isDashing) {
-            vX = keys.l ? -config.speed : (keys.r ? config.speed : vX * config.friction);
-            vY += config.gravity;
-        }
-        pX += vX; pY -= vY;
-
-        let onGround = false;
-        platforms.forEach(p => {
-            if (pX + 30 > p.x && pX < p.x + p.w) {
-                if (vY > 0 && pY <= p.y + 32 && pY > p.y) {
-                    pY = p.y + 32; vY = 0; jumpCount = 0; onGround = true; visual.className = "";
-                }
+    const pixelSize = scale;
+    
+    for(let row = 0; row < 16; row++) {
+        for(let col = 0; col < 16; col++) {
+            const char = sprite[row][col];
+            if(char !== 't') {
+                ctx.fillStyle = Colors[char];
+                // Apply squash and stretch to the draw call
+                ctx.fillRect(
+                    (col - 8) * pixelSize * stretchX, 
+                    (row - 16) * pixelSize * stretchY, 
+                    pixelSize * stretchX + 0.5, 
+                    pixelSize * stretchY + 0.5
+                );
             }
-        });
-
-        if(Math.abs(vX) > 1 && onGround) player.classList.add('walking');
-        else player.classList.remove('walking');
-
-        // Sprite Flipping
-        if(vX > 0.1) player.style.transform = "scaleX(1)";
-        else if(vX < -0.1) player.style.transform = "scaleX(-1)";
-
-        world.style.transform = `translateX(${-(pX - window.innerWidth/2)}px)`;
-        player.style.left = pX + 'px'; player.style.bottom = pY + 'px';
-
-        if(pY < -100) { pX = 150; pY = 400; vY = 0; }
-        requestAnimationFrame(update);
+        }
     }
+    ctx.restore();
+}
 
-    // Far Background Stars (Canvas)
-    const can = document.getElementById('bg-stars'); const ctx = can.getContext('2d');
-    can.width = window.innerWidth; can.height = window.innerHeight;
-    for(let i=0; i<100; i++) {
-        ctx.fillStyle = i%3===0 ? '#fff' : (i%3===1 ? '#0ff' : '#f0f');
-        ctx.fillRect(Math.random()*can.width, Math.random()*can.height, 2, 2);
+function update() {
+    // Movement Logic
+    if(!isDashing) {
+        vX = keys.l ? -6 : (keys.r ? 6 : vX * 0.8);
+        vY += 0.8; // Gravity
     }
+    
+    pX += vX; pY += vY;
+    if(keys.l) facing = -1;
+    if(keys.r) facing = 1;
 
-    update();
+    // Collision
+    let grounded = false;
+    platforms.forEach(plat => {
+        if(pX > plat.x && pX < plat.x + plat.w && vY > 0 && pY >= plat.y && pY < plat.y + 30) {
+            pY = plat.y; vY = 0; jumpCount = 0; grounded = true;
+        }
+    });
+
+    // Drawing
+    ctx.fillStyle = '#08001a';
+    ctx.fillRect(0, 0, width, height);
+
+    // Camera follow
+    ctx.save();
+    ctx.translate(-pX + width/2, 0);
+
+    // Draw Platforms (Pixel style)
+    platforms.forEach(plat => {
+        ctx.fillStyle = '#ff0055';
+        ctx.fillRect(plat.x, plat.y, plat.w, 40);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(plat.x, plat.y, plat.w, 4); // Highlight
+    });
+
+    // Animation variables
+    let sX = 1, sY = 1;
+    if(!grounded) { sX = 0.8; sY = 1.2; } // Stretch when jumping
+    if(isDashing) { sX = 1.5; sY = 0.6; } // Squash when dashing
+
+    drawPixelSprite(pX, pY, hayaSprite, facing, sX, sY);
+
+    ctx.restore();
+
+    // Respawn
+    if(pY > height + 200) { pX = 100; pY = 200; vY = 0; }
+    
+    // UI
+    dashFill.style.width = dashTimer > 0 ? (100 - (dashTimer/30)*100) + "%" : "100%";
+    if(dashTimer > 0) dashTimer--;
+
+    requestAnimationFrame(update);
+}
+
+// Controls
+const setupBtn = (id, press, release) => {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); press(); });
+    if(release) el.addEventListener('touchend', (e) => { e.preventDefault(); release(); });
+};
+
+setupBtn('lBtn', () => keys.l = true, () => keys.l = false);
+setupBtn('rBtn', () => keys.r = true, () => keys.r = false);
+setupBtn('jBtn', () => { if(jumpCount < 2) { vY = -18; jumpCount++; } });
+setupBtn('aBtn', () => {
+    if(dashTimer === 0) {
+        isDashing = true; dashTimer = 40; vX = facing * 20; vY = 0;
+        setTimeout(() => isDashing = false, 200);
+    }
+});
+
+window.addEventListener('resize', resize);
+resize();
+update();
 </script>
 </body>
 </html>
