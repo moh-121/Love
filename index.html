@@ -30,7 +30,7 @@
         }
         .btn-main:active { transform: scale(0.9); }
         
-        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
+        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; transition: transform 0.1s ease-out; }
         #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; transition: transform 0.1s; }
         #health-ui { position: absolute; top: 25px; right: 20px; font-size: 24px; }
         
@@ -42,15 +42,9 @@
             animation: fall linear forwards; font-size: 60px;
         }
         
-        /* Star Specific Animations */
-        .star-item {
-            animation: fall linear forwards, starGlow 1.5s infinite ease-in-out;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .star-inner {
-            animation: starSpin 2s infinite linear;
-            display: inline-block;
-        }
+        /* Star Animations */
+        .star-item { animation: fall linear forwards, starGlow 1.5s infinite ease-in-out; display: flex; justify-content: center; align-items: center; }
+        .star-inner { animation: starSpin 2s infinite linear; display: inline-block; }
 
         @keyframes fall { from { top: -100px; } to { top: 110vh; } }
         @keyframes starSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -60,13 +54,15 @@
         }
         
         /* Particle & Shatter Effects */
-        .particle {
-            position: absolute; border-radius: 50%; pointer-events: none; z-index: 1000;
-            animation: explode 0.6s ease-out forwards;
-        }
-        .shatter-star {
-            position: absolute; pointer-events: none; z-index: 1000; font-size: 20px;
-            animation: shatter 0.8s ease-out forwards;
+        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 1000; animation: explode 0.6s ease-out forwards; }
+        .shatter-star { position: absolute; pointer-events: none; z-index: 1000; font-size: 20px; animation: shatter 0.8s ease-out forwards; }
+
+        /* Petal Effect */
+        .petal {
+            position: absolute; pointer-events: none; z-index: 1000;
+            width: 12px; height: 18px; background: #ff4d6d;
+            border-radius: 50% 0 50% 50%; /* Petal shape */
+            animation: petalFloat 1.5s ease-out forwards;
         }
 
         @keyframes explode {
@@ -76,6 +72,10 @@
         @keyframes shatter {
             0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
             100% { transform: translate(var(--tx), var(--ty)) rotate(360deg) scale(0); opacity: 0; }
+        }
+        @keyframes petalFloat {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) rotate(var(--tr)) scale(0.5); opacity: 0; }
         }
 
         .perfect-popup { 
@@ -178,8 +178,7 @@
         function createParticles(x, y, color) {
             for (let i = 0; i < 8; i++) {
                 const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.backgroundColor = color;
+                p.className = 'particle'; p.style.backgroundColor = color;
                 p.style.width = p.style.height = Math.random() * 8 + 4 + 'px';
                 p.style.left = x + 'px'; p.style.top = y + 'px';
                 p.style.setProperty('--tx', `${(Math.random() - 0.5) * 150}px`);
@@ -192,8 +191,7 @@
         function createStarShatter(x, y) {
             for (let i = 0; i < 10; i++) {
                 const s = document.createElement('div');
-                s.className = 'shatter-star';
-                s.innerText = '⭐';
+                s.className = 'shatter-star'; s.innerText = '⭐';
                 s.style.left = x + 'px'; s.style.top = y + 'px';
                 s.style.setProperty('--tx', `${(Math.random() - 0.5) * 300}px`);
                 s.style.setProperty('--ty', `${(Math.random() - 0.5) * 300}px`);
@@ -202,17 +200,27 @@
             }
         }
 
+        function createRosePetals(x, y) {
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.left = x + 'px'; p.style.top = y + 'px';
+                p.style.setProperty('--tx', `${(Math.random() - 0.5) * 200}px`);
+                p.style.setProperty('--ty', `${50 + Math.random() * 150}px`); // Drift down
+                p.style.setProperty('--tr', `${Math.random() * 360}deg`);
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1500);
+            }
+        }
+
         function spawnItem(type) { 
             const h = document.createElement("div"); 
             h.className = "falling-item";
-            
             if (type === "star") {
-                h.classList.add("star-item");
-                h.innerHTML = '<span class="star-inner">⭐</span>';
+                h.classList.add("star-item"); h.innerHTML = '<span class="star-inner">⭐</span>';
             } else {
                 h.innerHTML = type === "rose" ? "🌹" : "❤️";
             }
-            
             h.style.left = Math.random() * 80 + 10 + "vw"; 
             h.style.animationDuration = (type === "heart" ? (Math.random() * 1.5 + 2.0) : 1.8) + "s"; 
             
@@ -224,10 +232,13 @@
 
                 if(type === "rose") { 
                     score += 15; sfx.rose(); showPopup(rect.left, rect.top, "+15", "#ff0040");
-                    createParticles(centerX, centerY, "#ff4d6d");
+                    createRosePetals(centerX, centerY);
+                    const gc = document.getElementById("game-container");
+                    gc.style.transform = "translate(5px, 5px)"; // Screen shake
+                    setTimeout(() => gc.style.transform = "translate(0,0)", 50);
                 } else if(type === "star") { 
                     score += 5; sfx.star(); showPopup(rect.left, rect.top, "+5", "gold");
-                    createStarShatter(centerX, centerY); // Specific shatter effect
+                    createStarShatter(centerX, centerY);
                 } else { 
                     score += 1; sfx.pop(); 
                     createParticles(centerX, centerY, "#ff758c");
