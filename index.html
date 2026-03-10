@@ -19,7 +19,6 @@
         
         h1 { font-size: clamp(35px, 10vw, 55px); color: #ff4d6d; margin: 0; text-shadow: 0 0 15px rgba(255, 77, 109, 0.4); }
         .sub-text { color: #ffd6e0; opacity: 0.8; font-size: 1.1rem; margin-top: 10px; }
-        .instruction-text { color: #ffb3c1; font-size: 0.9rem; margin-top: 5px; font-style: italic; }
         #counter { font-size: 1.3rem; color: #ffb3c1; margin: 25px 0; font-variant-numeric: tabular-nums; }
         
         .btn-main { 
@@ -29,37 +28,40 @@
             font-weight: bold; box-shadow: 0 8px 20px rgba(255, 77, 109, 0.3); 
             transition: transform 0.2s;
         }
-        .btn-main:active { transform: scale(0.95); }
+        .btn-main:active { transform: scale(0.9); }
         
         #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; }
-        #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; }
+        #game-ui { position: absolute; top: 25px; left: 20px; font-size: 16px; color: #ff4d6d; font-weight: 900; transition: transform 0.1s; }
         #health-ui { position: absolute; top: 25px; right: 20px; font-size: 24px; }
         
-        /* Custom Game Over Screen instead of Alert */
-        #game-over-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 800; background: rgba(0,0,0,0.85); flex-direction: column; justify-content: center; align-items: center; }
-        #game-over-screen h2 { color: #ff4d6d; font-size: 30px; margin-bottom: 20px; }
+        #game-over-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 800; background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; }
 
         .falling-item { 
             position: absolute; top: -100px; padding: 15px; cursor: pointer; 
             user-select: none; z-index: 600; touch-action: none; 
-            animation: fall linear forwards; font-size: 65px; 
+            animation: fall linear forwards; font-size: 60px;
         }
         
         @keyframes fall { from { top: -100px; } to { top: 110vh; } }
         
-        .star-item { font-size: 75px; filter: drop-shadow(0 0 15px gold); }
-        .rose-item { font-size: 85px; filter: drop-shadow(0 0 20px #ff0040); }
-        .spinner { display: inline-block; animation: spin 2s infinite linear; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
+        /* Particle Sparkle Effect */
+        .particle {
+            position: absolute; border-radius: 50%; pointer-events: none; z-index: 1000;
+            animation: explode 0.6s ease-out forwards;
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
         .perfect-popup { 
-            position: absolute; color: gold; font-weight: bold; font-size: 30px; 
-            pointer-events: none; z-index: 1000; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); 
+            position: absolute; color: gold; font-weight: bold; font-size: 24px; 
+            pointer-events: none; z-index: 1001; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); 
             animation: perfectFloat 0.8s ease-out forwards; 
         }
         @keyframes perfectFloat { 
             0% { transform: translateY(0) scale(0.5); opacity: 1; } 
-            100% { transform: translateY(-100px) scale(1.2); opacity: 0; } 
+            100% { transform: translateY(-80px) scale(1.2); opacity: 0; } 
         }
         
         #envelope-container { display: none; flex-direction: column; align-items: center; z-index: 700; opacity: 0; transition: opacity 0.8s; }
@@ -76,9 +78,13 @@
         #message-container.open { display: block; transform: scaleY(1) rotate(-0.5deg); opacity: 1; }
         #message { font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.5; text-align: left; opacity: 0; transition: opacity 1s ease-in 1.2s; margin: 0; }
         
-        .yes-btn { background: #4caf50; padding: 15px 40px; border-radius: 50px; color: white; border: none; font-size: 22px; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
-        .yes-btn:active { transform: scale(0.95); }
-        .no-btn { background: #f44336; padding: 8px 20px; border-radius: 50px; color: white; border: none; font-size: 14px; position: absolute; cursor: pointer; }
+        /* Fixed Button Layout */
+        .btn-group {
+            display: flex; justify-content: center; align-items: center; gap: 30px;
+            margin-top: 30px; width: 100%; min-height: 60px;
+        }
+        .yes-btn { background: #4caf50; padding: 15px 40px; border-radius: 50px; color: white; border: none; font-size: 22px; font-weight: bold; cursor: pointer; }
+        .no-btn { background: #f44336; padding: 10px 25px; border-radius: 50px; color: white; border: none; font-size: 16px; cursor: pointer; transition: none; }
         
         .star-bg { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--opacity); } }
@@ -89,7 +95,6 @@
     <div id="start-screen">
         <h1>For Haya ❤️</h1>
         <p class="sub-text">Collect 150 points to unlock the letter</p>
-        <p class="instruction-text">(Tap the falling items!)</p>
         <div id="counter">Loading...</div>
         <button class="btn-main" onclick="initAndStart()">Start Challenge</button>
     </div>
@@ -100,8 +105,8 @@
     </div>
 
     <div id="game-over-screen">
-        <h2>Oh no, you missed too many! 💔</h2>
-        <button class="btn-main" onclick="retryGame()">Try Again</button>
+        <h2 style="color: #ff4d6d;">Try again, Haya! ❤️</h2>
+        <button class="btn-main" onclick="retryGame()">Restart</button>
     </div>
 
     <div id="envelope-container">
@@ -113,8 +118,8 @@
     <div id="message-container">
         <p id="message">With every passing day, my love for you grows even stronger. Every time I hear your voice, I fall a little deeper, like you’ve become a part of me a part I never want to let go. I feel so lucky to call you mine, and I truly treasure every moment you spend with me. I’m so proud of the amazing, brave girl you’ve become. I truly love you with all my heart, and I always wish you the very best.<br><br>Show those nurses that my nurse is the absolute best there is!<br><br>—M</p>
         <div id="question-area" style="opacity:0; pointer-events:none; margin-top:35px;">
-            <p style="font-size: 19px; font-weight: bold; color: #ff4d6d; margin-bottom: 15px;">💍 Will you stay with me forever?</p>
-            <div style="position:relative; height:100px; width:100%; display:flex; justify-content:center; align-items:center;">
+            <p style="font-size: 19px; font-weight: bold; color: #ff4d6d; margin-bottom: 5px;">💍 Will you stay with me forever?</p>
+            <div class="btn-group">
                 <button id="yesBtn" class="yes-btn" onclick="sayYes()">Yes!</button>
                 <button id="noBtn" class="no-btn">No</button>
             </div>
@@ -122,62 +127,19 @@
     </div>
 
     <script>
-        // --- AUDIO SYNTHESIS SYSTEM ---
         let audioCtx;
-        function initAudio() { 
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
-            if (audioCtx.state === 'suspended') audioCtx.resume(); 
-        }
-
-        function playSfx(freq, type, duration, vol=0.05) { 
-            if (!audioCtx) return; 
-            const osc = audioCtx.createOscillator(); 
-            const gain = audioCtx.createGain(); 
-            osc.type = type; 
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime); 
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime); 
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); 
-            osc.connect(gain); 
-            gain.connect(audioCtx.destination); 
-            osc.start(); 
-            osc.stop(audioCtx.currentTime + duration); 
-        }
-
-        const sfx = { 
-            pop: () => playSfx(600, 'sine', 0.1, 0.05), 
-            star: () => { 
-                playSfx(880, 'triangle', 0.1, 0.05); 
-                setTimeout(() => playSfx(1100, 'triangle', 0.15, 0.05), 80); 
-            }, 
-            rose: () => { 
-                [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.05), i*100)); 
-            }, 
-            miss: () => playSfx(150, 'sawtooth', 0.2, 0.03), 
-            paper: () => { 
-                for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); 
-            }, 
-            win: () => {
-                [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120));
-            } 
-        };
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+        function playSfx(freq, type, duration, vol=0.05) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
+        const sfx = { pop: () => playSfx(600, 'sine', 0.1, 0.05), star: () => { playSfx(880, 'triangle', 0.1, 0.05); setTimeout(()=>playSfx(1100, 'triangle', 0.15, 0.05), 80); }, rose: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playSfx(f, 'sine', 0.3, 0.05), i*100)); }, miss: () => playSfx(150, 'sawtooth', 0.2, 0.03), paper: () => { for(let i=0; i<12; i++) setTimeout(() => playSfx(Math.random()*1600+600, 'sawtooth', 0.05, 0.01), i*35); }, win: () => [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => playSfx(n, 'sine', 0.4, 0.05), i*120)) };
         
-        // --- GAME LOGIC ---
-        let score = 0; 
-        let lives = 3; 
-        let gameActive = false; 
-        const targetScore = 150;
+        let score = 0; let lives = 3; let gameActive = false; const targetScore = 150;
         
         function initAndStart() { 
-            initAudio(); 
-            score = 0; 
-            lives = 3; 
-            updateLives();
+            initAudio(); score = 0; lives = 3; updateLives();
             document.getElementById("score").innerText = "0";
-            sfx.pop(); 
             document.getElementById("start-screen").style.display = "none"; 
             document.getElementById("game-container").style.display = "block"; 
-            gameActive = true; 
-            spawnLoop(); 
+            gameActive = true; spawnLoop(); 
         }
 
         function retryGame() {
@@ -190,54 +152,69 @@
             let rand = Math.random();
             let type = rand > 0.94 ? "rose" : (rand > 0.82 ? "star" : "heart");
             spawnItem(type); 
-            setTimeout(spawnLoop, Math.max(250, 850 - (score * 3))); 
+            setTimeout(spawnLoop, Math.max(250, 850 - (score * 2.5))); 
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.backgroundColor = color;
+                p.style.width = p.style.height = Math.random() * 10 + 5 + 'px';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = (Math.random() - 0.5) * 200;
+                p.style.setProperty('--tx', `${tx}px`);
+                p.style.setProperty('--ty', `${ty}px`);
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 600);
+            }
         }
 
         function spawnItem(type) { 
             const h = document.createElement("div"); 
             h.className = "falling-item";
-            h.innerHTML = type === "rose" ? "🌹" : (type === "star" ? '<div class="spinner">⭐</div>' : "❤️");
-            
-            if (type === "rose") h.classList.add("rose-item");
-            if (type === "star") h.classList.add("star-item");
-            
+            h.innerHTML = type === "rose" ? "🌹" : (type === "star" ? "⭐" : "❤️");
             h.style.left = Math.random() * 80 + 10 + "vw"; 
             h.style.animationDuration = (type === "heart" ? (Math.random() * 1.5 + 2.0) : 1.8) + "s"; 
             
             const catchItem = (e) => { 
-                e.preventDefault(); 
                 if (!gameActive) return;
-                
+                const rect = h.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
                 if(type === "rose") { 
-                    score += 15; 
-                    sfx.rose(); 
-                    showPopup(h.offsetLeft, h.offsetTop, "PERFECT +15", "#ff0040"); 
+                    score += 15; sfx.rose(); showPopup(rect.left, rect.top, "+15", "#ff0040");
+                    createParticles(centerX, centerY, "#ff4d6d");
                 } else if(type === "star") { 
-                    score += 5; 
-                    sfx.star(); 
-                    showPopup(h.offsetLeft, h.offsetTop, "GREAT +5", "gold"); 
+                    score += 5; sfx.star(); showPopup(rect.left, rect.top, "+5", "gold");
+                    createParticles(centerX, centerY, "gold");
                 } else { 
-                    score += 1; 
-                    sfx.pop(); 
+                    score += 1; sfx.pop(); 
+                    createParticles(centerX, centerY, "#ff758c");
                 }
                 
+                // Bounce UI
+                const ui = document.getElementById("game-ui");
+                ui.style.transform = "scale(1.2)";
+                setTimeout(() => ui.style.transform = "scale(1)", 100);
+
                 document.getElementById("score").innerText = Math.min(score, targetScore); 
                 h.remove(); 
-                
                 if (score >= targetScore) endToEnvelope(); 
             }; 
             
-            h.addEventListener("touchstart", catchItem); 
-            h.addEventListener("mousedown", catchItem); 
+            h.addEventListener("touchstart", (e) => { e.preventDefault(); catchItem(); }); 
+            h.addEventListener("mousedown", (e) => { e.preventDefault(); catchItem(); }); 
             document.getElementById("game-container").appendChild(h); 
             
             h.addEventListener('animationend', () => { 
                 if (h.parentNode) { 
                     h.remove(); 
                     if (type === "heart" && gameActive) { 
-                        lives--; 
-                        sfx.miss(); 
-                        updateLives(); 
+                        lives--; sfx.miss(); updateLives(); 
                         if (lives <= 0) gameOver();
                     } 
                 } 
@@ -253,86 +230,55 @@
 
         function showPopup(x, y, text, color) { 
             const p = document.createElement("div"); 
-            p.className = "perfect-popup"; 
-            p.innerText = text; 
-            p.style.left = x + "px"; 
-            p.style.top = y + "px"; 
-            p.style.color = color;
-            document.body.appendChild(p); 
-            setTimeout(() => p.remove(), 800); 
+            p.className = "perfect-popup"; p.innerText = text; 
+            p.style.left = x + "px"; p.style.top = y + "px"; p.style.color = color;
+            document.body.appendChild(p); setTimeout(() => p.remove(), 800); 
         }
 
-        function updateLives() { 
-            let l = ""; 
-            for(let i=0; i<lives; i++) l += "❤️"; 
-            document.getElementById("health-ui").innerText = l; 
-        }
+        function updateLives() { let l = ""; for(let i=0; i<lives; i++) l += "❤️"; document.getElementById("health-ui").innerText = l; }
         
         function endToEnvelope() { 
-            gameActive = false; 
-            sfx.win(); 
-            // Clear remaining items so they don't keep triggering events in the background
+            gameActive = false; sfx.win(); 
             document.querySelectorAll('.falling-item').forEach(i => i.remove());
-            
             document.getElementById("game-container").style.display = "none"; 
             const ec = document.getElementById("envelope-container"); 
-            ec.style.display = "flex"; 
-            setTimeout(() => ec.style.opacity = "1", 50); 
+            ec.style.display = "flex"; setTimeout(() => ec.style.opacity = "1", 50); 
         }
 
-        // --- ENVELOPE & LETTER SYSTEM ---
         function openLetterWithSound() { 
-            initAudio(); 
-            sfx.paper(); 
+            initAudio(); sfx.paper(); 
             document.getElementById("envelope-container").style.display = "none"; 
             const c = document.getElementById("message-container"); 
             c.style.display = "block"; 
-            
-            setTimeout(() => { 
-                c.classList.add('open'); 
-                document.getElementById("message").style.opacity = "1"; 
-            }, 100); 
-            
-            setTimeout(() => { 
-                document.getElementById("question-area").style.opacity = "1"; 
-                document.getElementById("question-area").style.pointerEvents = "auto"; 
-            }, 5500); 
+            setTimeout(() => { c.classList.add('open'); document.getElementById("message").style.opacity = "1"; }, 100); 
+            setTimeout(() => { document.getElementById("question-area").style.opacity = "1"; document.getElementById("question-area").style.pointerEvents = "auto"; }, 5500); 
         }
         
-        // --- ANNIVERSARY COUNTER ---
         const startDate = new Date("2025-12-15T00:00:00").getTime();
         function updateCounter() { 
-            const now = new Date().getTime(); 
-            const diff = now - startDate; 
-            const d = Math.floor(diff / 86400000); 
-            const h = Math.floor((diff % 86400000) / 3600000); 
-            const m = Math.floor((diff % 3600000) / 60000); 
-            const s = Math.floor((diff % 60000) / 1000); 
+            const now = new Date().getTime(); const diff = now - startDate; 
+            const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000); 
+            const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); 
             document.getElementById("counter").innerHTML = d + "d : " + h + "h : " + m + "m : " + s + "s"; 
         }
-        setInterval(updateCounter, 1000); 
-        updateCounter();
+        setInterval(updateCounter, 1000); updateCounter();
 
-        // --- THE "NO" BUTTON LOGIC ---
         const noBtn = document.getElementById("noBtn");
         function moveNo() { 
-            const x = Math.random() * (window.innerWidth - 80); 
-            const y = Math.random() * (window.innerHeight - 80); 
+            const x = Math.random() * (window.innerWidth - 100); 
+            const y = Math.random() * (window.innerHeight - 50); 
             noBtn.style.position = 'fixed'; 
             noBtn.style.left = x + "px"; 
             noBtn.style.top = y + "px"; 
         }
-        
-        // Make it escape touches (mobile) AND mouse hovers (desktop)
         noBtn.addEventListener("touchstart", (e) => { e.preventDefault(); moveNo(); });
-        noBtn.addEventListener("mouseenter", (e) => { e.preventDefault(); moveNo(); });
+        noBtn.addEventListener("mouseover", moveNo);
         
         function sayYes() { 
             sfx.win(); 
-            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>"; 
+            document.getElementById("message-container").innerHTML = "<h2 style='color:#ff4d6d; font-size: 32px; font-family:Caveat;'>Hehe! I knew it!<br>I love you forever baby ❤️</h2>"; 
         }
         
-        // --- BACKGROUND STARS ---
         for (let i = 0; i < 50; i++) { 
             const s = document.createElement("div"); 
             s.className = "star-bg"; 
